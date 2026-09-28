@@ -1,0 +1,61 @@
+{
+  "expo": {
+    "name": "Hair Massage",
+    "slug": "hair-massage-app",
+    "scheme": "hairmassage",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FDF8F5"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.yourcompany.hairmassage",
+      "infoPlist": {
+        "NSCameraUsageDescription": "We use your camera to let you log photos of your hair progress in your private Vault.",
+        "NSPhotoLibraryUsageDescription": "We access your photo library so you can save or import hair progress photos.",
+        "NSPhotoLibraryAddUsageDescription": "We save your massage progress photos to your photo library when you choose to export them."
+      }
+    },
+    "android": {
+      "package": "com.yourcompany.hairmassage",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#FDF8F5"
+      },
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow Hair Massage to access your camera to log progress photos."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Hair Massage to access your photos to save or import progress photos."
+        }
+      ],
+      "expo-font"
+    ],
+    "extra": {
+      "router": {
+        "origin": false
+      }
+    }
+  }
+}
