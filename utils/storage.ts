@@ -4,6 +4,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 // style API, which is still fully supported under this legacy entrypoint.
 import * as FileSystem from "expo-file-system/legacy";
 import { Session, Technique, VaultPhoto, Thread } from "@/types";
+import { toLocalDateISO } from "./date";
 
 const KEYS = {
   SESSIONS: "@hair_massage/sessions",
@@ -85,7 +86,7 @@ export async function addVaultPhoto(sourceUri: string, note?: string): Promise<V
   const photo: VaultPhoto = {
     id,
     uri: destUri,
-    dateISO: now.toISOString().slice(0, 10),
+    dateISO: toLocalDateISO(now),
     timestamp: now.getTime(),
     note,
   };

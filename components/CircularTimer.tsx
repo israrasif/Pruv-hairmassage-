@@ -1,14 +1,18 @@
 import React, { useEffect, useRef, useState } from "react";
-import { View, Text, StyleSheet, Pressable, Animated, Easing } from "react-native";
+import { View, Text, StyleSheet, Pressable, Animated, Easing, AppState } from "react-native";
 import Svg, { Circle } from "react-native-svg";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, typography } from "@/constants/theme";
+import * as Haptics from "expo-haptics";
+import { useKeepAwake } from "expo-keep-awake";
+import { useAudioPlayer } from "expo-audio";
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 const SIZE = 240;
 const STROKE = 14;
 const RADIUS = (SIZE - STROKE) / 2;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
+const RESET_DELAY_MS = 900;
 
 interface Props {
   durationSec: number;
@@ -18,34 +22,86 @@ interface Props {
 export default function CircularTimer({ durationSec, onComplete }: Props) {
   const [remaining, setRemaining] = useState(durationSec);
   const [running, setRunning] = useState(false);
+  const [justFinished, setJustFinished] = useState(false);
   const progress = useRef(new Animated.Value(0)).current;
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const resetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const endTimeRef = useRef<number | null>(null); // ms epoch when the session should finish
 
+  const player = useAudioPlayer(require("@/assets/sounds/391540__unlistenable__electro-success-sound.wav"));
+
+  // Keep the screen awake only while a session is actually running.
+  useKeepAwake(running ? "hair-massage-session" : undefined);
+
+  const onCompleteRef = useRef(onComplete);
   useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
+
+  const reset = () => {
+    if (resetTimeoutRef.current) clearTimeout(resetTimeoutRef.current);
+    endTimeRef.current = null;
+    setRunning(false);
+    setJustFinished(false);
     setRemaining(durationSec);
     progress.setValue(0);
+  };
+
+  useEffect(() => {
+    reset();
   }, [durationSec]);
+
+  // Recompute remaining from the end timestamp, and finish if time's already up.
+  const sync = () => {
+    if (endTimeRef.current == null) return;
+    const secsLeft = Math.max(0, Math.ceil((endTimeRef.current - Date.now()) / 1000));
+    setRemaining(secsLeft);
+    if (secsLeft <= 0) {
+      clearInterval(intervalRef.current!);
+      endTimeRef.current = null;
+      setRunning(false);
+      setJustFinished(true);
+
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => { });
+      player.seekTo(0);
+      player.play();
+
+      onCompleteRef.current(durationSec);
+      resetTimeoutRef.current = setTimeout(() => {
+        setJustFinished(false);
+        setRemaining(durationSec);
+        progress.setValue(0);
+      }, RESET_DELAY_MS);
+    }
+  };
 
   useEffect(() => {
     if (running) {
-      intervalRef.current = setInterval(() => {
-        setRemaining((prev) => {
-          if (prev <= 1) {
-            clearInterval(intervalRef.current!);
-            setRunning(false);
-            onComplete(durationSec);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
+      endTimeRef.current = Date.now() + remaining * 1000;
+      intervalRef.current = setInterval(sync, 1000);
     } else if (intervalRef.current) {
       clearInterval(intervalRef.current);
     }
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [running]);
+
+  // Re-sync the instant the app comes back to the foreground, instead of
+  // waiting for the next 1s tick.
+  useEffect(() => {
+    const sub = AppState.addEventListener("change", (state) => {
+      if (state === "active") sync();
+    });
+    return () => sub.remove();
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (resetTimeoutRef.current) clearTimeout(resetTimeoutRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     const fraction = 1 - remaining / durationSec;
@@ -64,24 +120,12 @@ export default function CircularTimer({ durationSec, onComplete }: Props) {
 
   const minutes = Math.floor(remaining / 60);
   const seconds = remaining % 60;
-
-  const reset = () => {
-    setRunning(false);
-    setRemaining(durationSec);
-    progress.setValue(0);
-  };
+  const statusLabel = justFinished ? "Session complete 🎉" : running ? "Relax..." : "Ready when you are";
 
   return (
     <View style={styles.container}>
       <Svg width={SIZE} height={SIZE}>
-        <Circle
-          cx={SIZE / 2}
-          cy={SIZE / 2}
-          r={RADIUS}
-          stroke={colors.track}
-          strokeWidth={STROKE}
-          fill="none"
-        />
+        <Circle cx={SIZE / 2} cy={SIZE / 2} r={RADIUS} stroke={colors.track} strokeWidth={STROKE} fill="none" />
         <AnimatedCircle
           cx={SIZE / 2}
           cy={SIZE / 2}
@@ -100,13 +144,13 @@ export default function CircularTimer({ durationSec, onComplete }: Props) {
         <Text style={styles.time}>
           {minutes}:{seconds.toString().padStart(2, "0")}
         </Text>
-        <Text style={styles.subtitle}>{running ? "Relax..." : "Ready when you are"}</Text>
+        <Text style={styles.subtitle}>{statusLabel}</Text>
       </View>
       <View style={styles.controls}>
         <Pressable style={styles.iconBtn} onPress={reset}>
           <Ionicons name="refresh" size={22} color={colors.primaryDark} />
         </Pressable>
-        <Pressable style={styles.mainBtn} onPress={() => setRunning((r) => !r)}>
+        <Pressable style={styles.mainBtn} onPress={() => setRunning((r) => !r)} disabled={justFinished}>
           <Ionicons name={running ? "pause" : "play"} size={28} color="#fff" />
         </Pressable>
         <View style={{ width: 42 }} />

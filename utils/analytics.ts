@@ -1,4 +1,5 @@
 import { Session } from "@/types";
+import { toLocalDateISO, daysAgoISO } from "@/utils/date";
 
 function toDateOnly(iso: string) {
   return iso.slice(0, 10);
@@ -8,12 +9,14 @@ export function computeStreak(sessions: Session[]): { current: number; longest: 
   const uniqueDays = Array.from(new Set(sessions.map((s) => toDateOnly(s.dateISO)))).sort();
   if (uniqueDays.length === 0) return { current: 0, longest: 0, totalDays: 0 };
 
+  // "YYYY-MM-DD" strings parse as UTC midnight, so the difference between
+  // two of them is always a whole number of days (no DST or timezone effects).
   let longest = 1;
   let run = 1;
   for (let i = 1; i < uniqueDays.length; i++) {
-    const prev = new Date(uniqueDays[i - 1]);
-    const curr = new Date(uniqueDays[i]);
-    const diffDays = Math.round((curr.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24));
+    const diffDays = Math.round(
+      (Date.parse(uniqueDays[i]) - Date.parse(uniqueDays[i - 1])) / (1000 * 60 * 60 * 24)
+    );
     if (diffDays === 1) {
       run += 1;
     } else if (diffDays > 1) {
@@ -23,33 +26,23 @@ export function computeStreak(sessions: Session[]): { current: number; longest: 
   }
   longest = Math.max(longest, run);
 
-  // current streak: walk backward from today
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  // current streak: walk backward from today (local date)
   const daySet = new Set(uniqueDays);
   let current = 0;
-  const cursor = new Date(today);
-  while (true) {
-    const iso = cursor.toISOString().slice(0, 10);
-    if (daySet.has(iso)) {
-      current += 1;
-      cursor.setDate(cursor.getDate() - 1);
-    } else {
-      break;
-    }
+  while (daySet.has(daysAgoISO(current))) {
+    current += 1;
   }
 
   return { current, longest, totalDays: uniqueDays.length };
 }
 
 export function last7DaysCounts(sessions: Session[]): { label: string; count: number }[] {
-  const result: { label: string; count: number }[] = [];
   const dayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const result: { label: string; count: number }[] = [];
   for (let i = 6; i >= 0; i--) {
     const d = new Date();
     d.setDate(d.getDate() - i);
-    d.setHours(0, 0, 0, 0);
-    const iso = d.toISOString().slice(0, 10);
+    const iso = toLocalDateISO(d);
     const count = sessions.filter((s) => toDateOnly(s.dateISO) === iso).length;
     result.push({ label: dayLabels[d.getDay()], count });
   }
@@ -61,10 +54,7 @@ export function consistencyScore(sessions: Session[]): number {
   const daySet = new Set(sessions.map((s) => toDateOnly(s.dateISO)));
   let hit = 0;
   for (let i = 0; i < 14; i++) {
-    const d = new Date();
-    d.setDate(d.getDate() - i);
-    const iso = d.toISOString().slice(0, 10);
-    if (daySet.has(iso)) hit += 1;
+    if (daySet.has(daysAgoISO(i))) hit += 1;
   }
   return Math.round((hit / 14) * 100);
 }

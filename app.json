@@ -50,7 +50,8 @@
           "photosPermission": "Allow Hair Massage to access your photos to save or import progress photos."
         }
       ],
-      "expo-font"
+      "expo-font",
+      "expo-audio"
     ],
     "extra": {
       "router": {

@@ -7,8 +7,10 @@ import MediaPlayer from "@/components/MediaPlayer";
 import { Technique, Session } from "@/types";
 import { getTechniques, saveTechniques, addSession } from "@/utils/storage";
 import { colors, spacing, typography, radii } from "@/constants/theme";
+import { toLocalDateISO } from "@/utils/date";
 
-const SESSION_LENGTH_SEC = 5 * 60; // 5 minute default session
+
+const SESSION_LENGTH_SEC = 1 * 10; // 5 minute default session
 
 export default function HomeScreen() {
   const [techniques, setTechniques] = useState<Technique[]>([]);
@@ -31,7 +33,7 @@ export default function HomeScreen() {
       const now = new Date();
       const session: Session = {
         id: `${now.getTime()}`,
-        dateISO: now.toISOString().slice(0, 10),
+        dateISO: toLocalDateISO(now),
         timestamp: now.getTime(),
         durationSec: elapsedSec,
         techniques: techniques.filter((t) => t.enabled).map((t) => t.label),
