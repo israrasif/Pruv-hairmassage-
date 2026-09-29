@@ -1,5 +1,19 @@
-import React, { useEffect, useRef, useState } from "react";
-import { View, Text, StyleSheet, Pressable, Animated, Easing, AppState } from "react-native";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  Animated,
+  Easing,
+  AppState,
+} from "react-native";
 import Svg, { Circle } from "react-native-svg";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, typography } from "@/constants/theme";
@@ -23,12 +37,14 @@ export default function CircularTimer({ durationSec, onComplete }: Props) {
   const [remaining, setRemaining] = useState(durationSec);
   const [running, setRunning] = useState(false);
   const [justFinished, setJustFinished] = useState(false);
-  const progress = useRef(new Animated.Value(0)).current;
+  const progress = useMemo(() => new Animated.Value(0), []);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const resetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const endTimeRef = useRef<number | null>(null); // ms epoch when the session should finish
 
-  const player = useAudioPlayer(require("@/assets/sounds/391540__unlistenable__electro-success-sound.wav"));
+  const player = useAudioPlayer(
+    require("@/assets/sounds/391540__unlistenable__electro-success-sound.wav"),
+  );
 
   // Keep the screen awake only while a session is actually running.
   useKeepAwake(running ? "hair-massage-session" : undefined);
@@ -38,31 +54,32 @@ export default function CircularTimer({ durationSec, onComplete }: Props) {
     onCompleteRef.current = onComplete;
   }, [onComplete]);
 
-  const reset = () => {
+  const reset = useCallback(() => {
     if (resetTimeoutRef.current) clearTimeout(resetTimeoutRef.current);
     endTimeRef.current = null;
     setRunning(false);
     setJustFinished(false);
     setRemaining(durationSec);
     progress.setValue(0);
-  };
-
-  useEffect(() => {
-    reset();
-  }, [durationSec]);
+  }, [durationSec, progress]);
 
   // Recompute remaining from the end timestamp, and finish if time's already up.
-  const sync = () => {
+  const sync = useCallback(() => {
     if (endTimeRef.current == null) return;
-    const secsLeft = Math.max(0, Math.ceil((endTimeRef.current - Date.now()) / 1000));
+    const secsLeft = Math.max(
+      0,
+      Math.ceil((endTimeRef.current - Date.now()) / 1000),
+    );
     setRemaining(secsLeft);
     if (secsLeft <= 0) {
-      clearInterval(intervalRef.current!);
+      if (intervalRef.current) clearInterval(intervalRef.current);
       endTimeRef.current = null;
       setRunning(false);
       setJustFinished(true);
 
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => { });
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(
+        () => {},
+      );
       player.seekTo(0);
       player.play();
 
@@ -73,7 +90,7 @@ export default function CircularTimer({ durationSec, onComplete }: Props) {
         progress.setValue(0);
       }, RESET_DELAY_MS);
     }
-  };
+  }, [durationSec, player, progress]);
 
   useEffect(() => {
     if (running) {
@@ -95,7 +112,7 @@ export default function CircularTimer({ durationSec, onComplete }: Props) {
       if (state === "active") sync();
     });
     return () => sub.remove();
-  }, []);
+  }, [sync]);
 
   useEffect(() => {
     return () => {
@@ -111,7 +128,7 @@ export default function CircularTimer({ durationSec, onComplete }: Props) {
       easing: Easing.linear,
       useNativeDriver: true,
     }).start();
-  }, [remaining]);
+  }, [remaining, durationSec, progress]);
 
   const strokeDashoffset = progress.interpolate({
     inputRange: [0, 1],
@@ -120,12 +137,23 @@ export default function CircularTimer({ durationSec, onComplete }: Props) {
 
   const minutes = Math.floor(remaining / 60);
   const seconds = remaining % 60;
-  const statusLabel = justFinished ? "Session complete 🎉" : running ? "Relax..." : "Ready when you are";
+  const statusLabel = justFinished
+    ? "Session complete 🎉"
+    : running
+      ? "Relax..."
+      : "Ready when you are";
 
   return (
     <View style={styles.container}>
       <Svg width={SIZE} height={SIZE}>
-        <Circle cx={SIZE / 2} cy={SIZE / 2} r={RADIUS} stroke={colors.track} strokeWidth={STROKE} fill="none" />
+        <Circle
+          cx={SIZE / 2}
+          cy={SIZE / 2}
+          r={RADIUS}
+          stroke={colors.track}
+          strokeWidth={STROKE}
+          fill="none"
+        />
         <AnimatedCircle
           cx={SIZE / 2}
           cy={SIZE / 2}
@@ -150,7 +178,11 @@ export default function CircularTimer({ durationSec, onComplete }: Props) {
         <Pressable style={styles.iconBtn} onPress={reset}>
           <Ionicons name="refresh" size={22} color={colors.primaryDark} />
         </Pressable>
-        <Pressable style={styles.mainBtn} onPress={() => setRunning((r) => !r)} disabled={justFinished}>
+        <Pressable
+          style={styles.mainBtn}
+          onPress={() => setRunning((r) => !r)}
+          disabled={justFinished}
+        >
           <Ionicons name={running ? "pause" : "play"} size={28} color="#fff" />
         </Pressable>
         <View style={{ width: 42 }} />
@@ -161,10 +193,23 @@ export default function CircularTimer({ durationSec, onComplete }: Props) {
 
 const styles = StyleSheet.create({
   container: { alignItems: "center", justifyContent: "center" },
-  center: { position: "absolute", top: 0, left: 0, right: 0, height: SIZE, alignItems: "center", justifyContent: "center" },
+  center: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: SIZE,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   time: { ...typography.h1, fontSize: 40, color: colors.text },
   subtitle: { ...typography.caption, color: colors.textMuted, marginTop: 4 },
-  controls: { flexDirection: "row", alignItems: "center", gap: 20, marginTop: 20 },
+  controls: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 20,
+    marginTop: 20,
+  },
   iconBtn: {
     width: 42,
     height: 42,

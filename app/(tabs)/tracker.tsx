@@ -15,7 +15,9 @@ function groupByDay(sessions: Session[]): Record<string, Session[]> {
   sessions.forEach((s) => {
     (map[s.dateISO] ||= []).push(s);
   });
-  Object.values(map).forEach((list) => list.sort((a, b) => a.timestamp - b.timestamp));
+  Object.values(map).forEach((list) =>
+    list.sort((a, b) => a.timestamp - b.timestamp),
+  );
   return map;
 }
 
@@ -34,7 +36,10 @@ function formatDay(iso: string) {
 }
 
 function formatTime(ts: number) {
-  return new Date(ts).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  return new Date(ts).toLocaleTimeString([], {
+    hour: "numeric",
+    minute: "2-digit",
+  });
 }
 
 export default function TrackerScreen() {
@@ -45,7 +50,7 @@ export default function TrackerScreen() {
     useCallback(() => {
       getSessions().then(setSessions);
       setSelectedDay(daysAgoISO(0));
-    }, [])
+    }, []),
   );
 
   const { current, longest, totalDays } = computeStreak(sessions);
@@ -63,7 +68,9 @@ export default function TrackerScreen() {
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.title}>Your Streak</Text>
-        <Text style={styles.subtitle}>Consistency is what makes the massage routine work.</Text>
+        <Text style={styles.subtitle}>
+          Consistency is what makes the massage routine work.
+        </Text>
 
         <View style={styles.statsRow}>
           <View style={styles.statCard}>
@@ -98,9 +105,19 @@ export default function TrackerScreen() {
         <View style={styles.legendRow}>
           <View style={[styles.legendDot, { backgroundColor: colors.track }]} />
           <Text style={styles.legendText}>None</Text>
-          <View style={[styles.legendDot, { backgroundColor: colors.secondary, marginLeft: spacing.md }]} />
+          <View
+            style={[
+              styles.legendDot,
+              { backgroundColor: colors.secondary, marginLeft: spacing.md },
+            ]}
+          />
           <Text style={styles.legendText}>1 session</Text>
-          <View style={[styles.legendDot, { backgroundColor: colors.primary, marginLeft: spacing.md }]} />
+          <View
+            style={[
+              styles.legendDot,
+              { backgroundColor: colors.primary, marginLeft: spacing.md },
+            ]}
+          />
           <Text style={styles.legendText}>2+ sessions</Text>
         </View>
 
@@ -111,8 +128,12 @@ export default function TrackerScreen() {
           selectedSessions.map((s) => (
             <View key={s.id} style={styles.sessionCard}>
               <View style={styles.sessionTop}>
-                <Text style={styles.sessionTime}>{formatTime(s.timestamp)}</Text>
-                <Text style={styles.sessionDuration}>{Math.round(s.durationSec / 60)} min</Text>
+                <Text style={styles.sessionTime}>
+                  {formatTime(s.timestamp)}
+                </Text>
+                <Text style={styles.sessionDuration}>
+                  {Math.round(s.durationSec / 60)} min
+                </Text>
               </View>
               <View style={styles.chipRow}>
                 {s.techniques.length === 0 ? (
@@ -137,7 +158,12 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   container: { padding: spacing.lg, paddingBottom: spacing.xl * 2 },
   title: { ...typography.h1, color: colors.text },
-  subtitle: { ...typography.body, color: colors.textMuted, marginTop: spacing.xs, marginBottom: spacing.lg },
+  subtitle: {
+    ...typography.body,
+    color: colors.textMuted,
+    marginTop: spacing.xs,
+    marginBottom: spacing.lg,
+  },
   statsRow: { flexDirection: "row", gap: spacing.sm },
   statCard: {
     flex: 1,
@@ -149,12 +175,32 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   statNumber: { ...typography.h1, color: colors.primary },
-  statLabel: { ...typography.caption, color: colors.textMuted, marginTop: 2, textAlign: "center" },
-  sectionHeading: { ...typography.h3, color: colors.text, marginTop: spacing.xl, marginBottom: spacing.sm },
+  statLabel: {
+    ...typography.caption,
+    color: colors.textMuted,
+    marginTop: 2,
+    textAlign: "center",
+  },
+  sectionHeading: {
+    ...typography.h3,
+    color: colors.text,
+    marginTop: spacing.xl,
+    marginBottom: spacing.sm,
+  },
   grid: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
-  cell: { width: 26, height: 26, borderRadius: 6, borderWidth: 2, borderColor: "transparent" },
+  cell: {
+    width: 26,
+    height: 26,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: "transparent",
+  },
   cellSelected: { borderColor: colors.primaryDark },
-  legendRow: { flexDirection: "row", alignItems: "center", marginTop: spacing.md },
+  legendRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: spacing.md,
+  },
   legendDot: { width: 10, height: 10, borderRadius: 5, marginRight: 6 },
   legendText: { ...typography.caption, color: colors.textMuted },
   emptyText: { ...typography.body, color: colors.textMuted },
@@ -169,7 +215,12 @@ const styles = StyleSheet.create({
   sessionTop: { flexDirection: "row", justifyContent: "space-between" },
   sessionTime: { ...typography.h3, color: colors.text },
   sessionDuration: { ...typography.caption, color: colors.textMuted },
-  chipRow: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: spacing.sm },
+  chipRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 6,
+    marginTop: spacing.sm,
+  },
   chip: {
     backgroundColor: colors.track,
     borderRadius: radii.pill,

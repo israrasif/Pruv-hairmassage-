@@ -76,7 +76,10 @@ export async function getVaultPhotos(): Promise<VaultPhoto[]> {
   }
 }
 
-export async function addVaultPhoto(sourceUri: string, note?: string): Promise<VaultPhoto[]> {
+export async function addVaultPhoto(
+  sourceUri: string,
+  note?: string,
+): Promise<VaultPhoto[]> {
   await ensureVaultDir();
   const id = `${Date.now()}`;
   const destUri = `${VAULT_DIR}${id}.jpg`;
@@ -120,8 +123,18 @@ const SEED_THREADS: Thread[] = [
     title: "Best oils for dry scalp?",
     category: "Tips",
     messages: [
-      { id: "m1", author: "Asha", text: "Coconut oil warmed slightly works wonders for me.", timestamp: Date.now() - 1000 * 60 * 60 * 5 },
-      { id: "m2", author: "Priya", text: "Try rosemary oil mixed in, helped with regrowth too.", timestamp: Date.now() - 1000 * 60 * 60 * 3 },
+      {
+        id: "m1",
+        author: "Asha",
+        text: "Coconut oil warmed slightly works wonders for me.",
+        timestamp: Date.now() - 1000 * 60 * 60 * 5,
+      },
+      {
+        id: "m2",
+        author: "Priya",
+        text: "Try rosemary oil mixed in, helped with regrowth too.",
+        timestamp: Date.now() - 1000 * 60 * 60 * 3,
+      },
     ],
   },
   {
@@ -129,7 +142,12 @@ const SEED_THREADS: Thread[] = [
     title: "30-day streak check-in!",
     category: "Progress",
     messages: [
-      { id: "m3", author: "Kabir", text: "Just hit day 30, hair feels so much softer.", timestamp: Date.now() - 1000 * 60 * 60 * 20 },
+      {
+        id: "m3",
+        author: "Kabir",
+        text: "Just hit day 30, hair feels so much softer.",
+        timestamp: Date.now() - 1000 * 60 * 60 * 20,
+      },
     ],
   },
   {
@@ -137,7 +155,12 @@ const SEED_THREADS: Thread[] = [
     title: "How long per session is ideal?",
     category: "Questions",
     messages: [
-      { id: "m4", author: "Neha", text: "I do 10 minutes daily, seems to be the sweet spot.", timestamp: Date.now() - 1000 * 60 * 60 * 30 },
+      {
+        id: "m4",
+        author: "Neha",
+        text: "I do 10 minutes daily, seems to be the sweet spot.",
+        timestamp: Date.now() - 1000 * 60 * 60 * 30,
+      },
     ],
   },
 ];
@@ -155,15 +178,22 @@ export async function getThreads(): Promise<Thread[]> {
   }
 }
 
-export async function addMessageToThread(threadId: string, text: string, author = "You"): Promise<Thread[]> {
+export async function addMessageToThread(
+  threadId: string,
+  text: string,
+  author = "You",
+): Promise<Thread[]> {
   const threads = await getThreads();
   const updated = threads.map((t) =>
     t.id === threadId
       ? {
           ...t,
-          messages: [...t.messages, { id: `${Date.now()}`, author, text, timestamp: Date.now() }],
+          messages: [
+            ...t.messages,
+            { id: `${Date.now()}`, author, text, timestamp: Date.now() },
+          ],
         }
-      : t
+      : t,
   );
   await AsyncStorage.setItem(KEYS.THREADS, JSON.stringify(updated));
   return updated;

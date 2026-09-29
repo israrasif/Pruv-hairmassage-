@@ -24,14 +24,24 @@ export default function MediaPlayer({ source }: Props) {
   const toggleMute = () => {
     const next = !muted;
     setMuted(next);
+    // eslint-disable-next-line react-hooks/immutability
     player.muted = next;
   };
 
   return (
     <View style={styles.wrapper}>
-      <VideoView style={styles.video} player={player} contentFit="cover" nativeControls={false} />
+      <VideoView
+        style={styles.video}
+        player={player}
+        contentFit="cover"
+        nativeControls={false}
+      />
       <Pressable style={styles.muteBtn} onPress={toggleMute}>
-        <Ionicons name={muted ? "volume-mute" : "volume-high"} size={18} color="#fff" />
+        <Ionicons
+          name={muted ? "volume-mute" : "volume-high"}
+          size={18}
+          color="#fff"
+        />
       </Pressable>
     </View>
   );

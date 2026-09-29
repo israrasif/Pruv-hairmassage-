@@ -1,8 +1,8 @@
 {
   "expo": {
     "name": "Growmo",
-    "slug": "hair-massage-app",
-    "scheme": "hairmassage",
+    "slug": "growmo",
+    "scheme": "growmo",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -12,57 +12,39 @@
       "resizeMode": "contain",
       "backgroundColor": "#FDF8F5"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.yourcompany.hairmassage",
-      "infoPlist": {
-        "NSCameraUsageDescription": "We use your camera to let you log photos of your hair progress in your private Vault.",
-        "NSPhotoLibraryUsageDescription": "We access your photo library so you can save or import hair progress photos.",
-        "NSPhotoLibraryAddUsageDescription": "We save your massage progress photos to your photo library when you choose to export them."
-      }
+      "bundleIdentifier": "com.growmo.app"
     },
     "android": {
-      "package": "com.yourcompany.hairmassage",
+      "package": "com.growmo.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FDF8F5"
       },
-      "permissions": [
-        "android.permission.CAMERA",
-        "android.permission.READ_EXTERNAL_STORAGE",
-        "android.permission.WRITE_EXTERNAL_STORAGE",
+      "permissions": ["android.permission.CAMERA"],
+      "blockedPermissions": [
         "android.permission.RECORD_AUDIO",
-        "android.permission.MODIFY_AUDIO_SETTINGS",
-        "android.permission.FOREGROUND_SERVICE",
-        "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE"
       ]
     },
     "plugins": [
       "expo-router",
       [
-        "expo-camera",
-        {
-          "cameraPermission": "Allow Hair Massage to access your camera to log progress photos."
-        }
-      ],
-      [
         "expo-image-picker",
         {
-          "photosPermission": "Allow Hair Massage to access your photos to save or import progress photos."
+          "cameraPermission": "Growmo uses your camera so you can take hair progress photos for your private Vault.",
+          "photosPermission": "Growmo accesses your photos so you can import hair progress photos into your private Vault.",
+          "microphonePermission": false
         }
       ],
-      "expo-font",
-      "expo-audio"
+      "expo-font"
     ],
     "extra": {
       "router": {
         "origin": false
-      },
-      "eas": {
-        "projectId": "df8069a2-153e-4ad7-9b60-ffea2d94232c"
       }
     }
   }

@@ -4,14 +4,23 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Rect, Text as SvgText } from "react-native-svg";
 import { Session } from "@/types";
 import { getSessions } from "@/utils/storage";
-import { last7DaysCounts, consistencyScore, computeStreak, techniqueFrequency } from "@/utils/analytics";
+import {
+  last7DaysCounts,
+  consistencyScore,
+  computeStreak,
+  techniqueFrequency,
+} from "@/utils/analytics";
 import { colors, spacing, typography, radii } from "@/constants/theme";
 
 const CHART_WIDTH = Dimensions.get("window").width - spacing.lg * 2;
 const CHART_HEIGHT = 160;
 const BAR_GAP = 10;
 
-function insightMessage(score: number, streak: number, totalSessions: number): string {
+function insightMessage(
+  score: number,
+  streak: number,
+  totalSessions: number,
+): string {
   if (totalSessions === 0) {
     return "Log your first session on the Massage tab to start seeing insights here.";
   }
@@ -38,13 +47,16 @@ export default function AnalyzeScreen() {
   const topTechnique = Object.entries(freq).sort((a, b) => b[1] - a[1])[0];
 
   const maxCount = Math.max(1, ...weekly.map((w) => w.count));
-  const barWidth = (CHART_WIDTH - BAR_GAP * (weekly.length - 1)) / weekly.length;
+  const barWidth =
+    (CHART_WIDTH - BAR_GAP * (weekly.length - 1)) / weekly.length;
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.title}>Progress Analysis</Text>
-        <Text style={styles.subtitle}>A rough read on whether the routine is working for you.</Text>
+        <Text style={styles.subtitle}>
+          A rough read on whether the routine is working for you.
+        </Text>
 
         <View style={styles.scoreCard}>
           <Text style={styles.scoreNumber}>{score}%</Text>
@@ -83,7 +95,9 @@ export default function AnalyzeScreen() {
 
         <Text style={styles.sectionHeading}>Insight</Text>
         <View style={styles.insightCard}>
-          <Text style={styles.insightText}>{insightMessage(score, current, sessions.length)}</Text>
+          <Text style={styles.insightText}>
+            {insightMessage(score, current, sessions.length)}
+          </Text>
         </View>
 
         <View style={styles.statsGrid}>
@@ -111,7 +125,12 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   container: { padding: spacing.lg, paddingBottom: spacing.xl * 2 },
   title: { ...typography.h1, color: colors.text },
-  subtitle: { ...typography.body, color: colors.textMuted, marginTop: spacing.xs, marginBottom: spacing.lg },
+  subtitle: {
+    ...typography.body,
+    color: colors.textMuted,
+    marginTop: spacing.xs,
+    marginBottom: spacing.lg,
+  },
   scoreCard: {
     backgroundColor: colors.primary,
     borderRadius: radii.lg,
@@ -119,8 +138,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   scoreNumber: { ...typography.h1, fontSize: 36, color: "#fff" },
-  scoreLabel: { ...typography.caption, color: "#fff", marginTop: 4, opacity: 0.9 },
-  sectionHeading: { ...typography.h3, color: colors.text, marginTop: spacing.xl, marginBottom: spacing.sm },
+  scoreLabel: {
+    ...typography.caption,
+    color: "#fff",
+    marginTop: 4,
+    opacity: 0.9,
+  },
+  sectionHeading: {
+    ...typography.h3,
+    color: colors.text,
+    marginTop: spacing.xl,
+    marginBottom: spacing.sm,
+  },
   insightCard: {
     backgroundColor: colors.surface,
     borderRadius: radii.md,
@@ -141,5 +170,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   statNumber: { ...typography.h3, color: colors.primary },
-  statLabel: { ...typography.caption, color: colors.textMuted, marginTop: 2, textAlign: "center" },
+  statLabel: {
+    ...typography.caption,
+    color: colors.textMuted,
+    marginTop: 2,
+    textAlign: "center",
+  },
 });

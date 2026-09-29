@@ -40,16 +40,24 @@ export default function CommunityScreen() {
   if (activeThread) {
     return (
       <SafeAreaView style={styles.safe} edges={["top"]}>
-        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+        >
           <View style={styles.threadHeader}>
-            <Pressable onPress={() => setActiveThreadId(null)} style={styles.backBtn}>
+            <Pressable
+              onPress={() => setActiveThreadId(null)}
+              style={styles.backBtn}
+            >
               <Ionicons name="chevron-back" size={22} color={colors.text} />
             </Pressable>
             <View style={{ flex: 1 }}>
               <Text style={styles.threadHeaderTitle} numberOfLines={1}>
                 {activeThread.title}
               </Text>
-              <Text style={styles.threadHeaderCategory}>{activeThread.category}</Text>
+              <Text style={styles.threadHeaderCategory}>
+                {activeThread.category}
+              </Text>
             </View>
           </View>
 
@@ -87,22 +95,30 @@ export default function CommunityScreen() {
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <View style={styles.header}>
         <Text style={styles.title}>Community</Text>
-        <Text style={styles.subtitle}>Swap tips and progress with others on the same routine.</Text>
+        <Text style={styles.subtitle}>
+          Swap tips and progress with others on the same routine.
+        </Text>
       </View>
       <FlatList
         data={threads}
         keyExtractor={(t) => t.id}
         contentContainerStyle={{ padding: spacing.lg, gap: spacing.sm }}
         renderItem={({ item }) => (
-          <Pressable style={styles.threadCard} onPress={() => setActiveThreadId(item.id)}>
+          <Pressable
+            style={styles.threadCard}
+            onPress={() => setActiveThreadId(item.id)}
+          >
             <View style={styles.threadCardTop}>
               <Text style={styles.threadCategory}>{item.category}</Text>
-              <Text style={styles.threadReplies}>{item.messages.length} replies</Text>
+              <Text style={styles.threadReplies}>
+                {item.messages.length} replies
+              </Text>
             </View>
             <Text style={styles.threadTitle}>{item.title}</Text>
             {item.messages.length > 0 && (
               <Text style={styles.threadPreview} numberOfLines={1}>
-                {item.messages[item.messages.length - 1].author}: {item.messages[item.messages.length - 1].text}
+                {item.messages[item.messages.length - 1].author}:{" "}
+                {item.messages[item.messages.length - 1].text}
               </Text>
             )}
           </Pressable>
@@ -116,7 +132,11 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   header: { paddingHorizontal: spacing.lg, paddingTop: spacing.md },
   title: { ...typography.h1, color: colors.text },
-  subtitle: { ...typography.body, color: colors.textMuted, marginTop: spacing.xs },
+  subtitle: {
+    ...typography.body,
+    color: colors.textMuted,
+    marginTop: spacing.xs,
+  },
   threadCard: {
     backgroundColor: colors.surface,
     borderRadius: radii.md,
@@ -125,10 +145,18 @@ const styles = StyleSheet.create({
     padding: spacing.md,
   },
   threadCardTop: { flexDirection: "row", justifyContent: "space-between" },
-  threadCategory: { ...typography.caption, color: colors.primary, fontWeight: "600" },
+  threadCategory: {
+    ...typography.caption,
+    color: colors.primary,
+    fontWeight: "600",
+  },
   threadReplies: { ...typography.caption, color: colors.textMuted },
   threadTitle: { ...typography.h3, color: colors.text, marginTop: 4 },
-  threadPreview: { ...typography.caption, color: colors.textMuted, marginTop: 4 },
+  threadPreview: {
+    ...typography.caption,
+    color: colors.textMuted,
+    marginTop: 4,
+  },
 
   threadHeader: {
     flexDirection: "row",
@@ -148,7 +176,11 @@ const styles = StyleSheet.create({
     padding: spacing.sm,
     marginBottom: spacing.sm,
   },
-  messageAuthor: { ...typography.caption, color: colors.primary, fontWeight: "700" },
+  messageAuthor: {
+    ...typography.caption,
+    color: colors.primary,
+    fontWeight: "700",
+  },
   messageText: { ...typography.body, color: colors.text, marginTop: 2 },
   composer: {
     flexDirection: "row",

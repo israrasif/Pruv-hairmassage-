@@ -5,8 +5,14 @@ function toDateOnly(iso: string) {
   return iso.slice(0, 10);
 }
 
-export function computeStreak(sessions: Session[]): { current: number; longest: number; totalDays: number } {
-  const uniqueDays = Array.from(new Set(sessions.map((s) => toDateOnly(s.dateISO)))).sort();
+export function computeStreak(sessions: Session[]): {
+  current: number;
+  longest: number;
+  totalDays: number;
+} {
+  const uniqueDays = Array.from(
+    new Set(sessions.map((s) => toDateOnly(s.dateISO))),
+  ).sort();
   if (uniqueDays.length === 0) return { current: 0, longest: 0, totalDays: 0 };
 
   // "YYYY-MM-DD" strings parse as UTC midnight, so the difference between
@@ -15,7 +21,8 @@ export function computeStreak(sessions: Session[]): { current: number; longest: 
   let run = 1;
   for (let i = 1; i < uniqueDays.length; i++) {
     const diffDays = Math.round(
-      (Date.parse(uniqueDays[i]) - Date.parse(uniqueDays[i - 1])) / (1000 * 60 * 60 * 24)
+      (Date.parse(uniqueDays[i]) - Date.parse(uniqueDays[i - 1])) /
+        (1000 * 60 * 60 * 24),
     );
     if (diffDays === 1) {
       run += 1;
@@ -36,7 +43,9 @@ export function computeStreak(sessions: Session[]): { current: number; longest: 
   return { current, longest, totalDays: uniqueDays.length };
 }
 
-export function last7DaysCounts(sessions: Session[]): { label: string; count: number }[] {
+export function last7DaysCounts(
+  sessions: Session[],
+): { label: string; count: number }[] {
   const dayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   const result: { label: string; count: number }[] = [];
   for (let i = 6; i >= 0; i--) {
@@ -59,7 +68,9 @@ export function consistencyScore(sessions: Session[]): number {
   return Math.round((hit / 14) * 100);
 }
 
-export function techniqueFrequency(sessions: Session[]): Record<string, number> {
+export function techniqueFrequency(
+  sessions: Session[],
+): Record<string, number> {
   const freq: Record<string, number> = {};
   sessions.forEach((s) => {
     s.techniques.forEach((t) => {

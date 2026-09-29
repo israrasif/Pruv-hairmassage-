@@ -11,7 +11,7 @@ interface Props {
 export default function ToggleList({ techniques, onToggle }: Props) {
   return (
     <View style={styles.container}>
-      <Text style={styles.heading}>Today's focus</Text>
+      <Text style={styles.heading}>{"Today's focus"}</Text>
       {techniques.map((t) => (
         <View key={t.id} style={styles.row}>
           <Text style={styles.label}>{t.label}</Text>
