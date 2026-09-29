@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Hair Massage",
+    "name": "Growmo",
     "slug": "hair-massage-app",
     "scheme": "hairmassage",
     "version": "1.0.0",
@@ -31,9 +31,13 @@
         "backgroundColor": "#FDF8F5"
       },
       "permissions": [
-        "CAMERA",
-        "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE"
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"
       ]
     },
     "plugins": [
@@ -56,6 +60,9 @@
     "extra": {
       "router": {
         "origin": false
+      },
+      "eas": {
+        "projectId": "df8069a2-153e-4ad7-9b60-ffea2d94232c"
       }
     }
   }
