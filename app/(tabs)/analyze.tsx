@@ -8,7 +8,7 @@ import {
   last7DaysCounts,
   consistencyScore,
   computeStreak,
-  techniqueFrequency,
+  activityFrequency,
 } from "@/utils/analytics";
 import { colors, spacing, typography, radii } from "@/constants/theme";
 
@@ -43,8 +43,8 @@ export default function AnalyzeScreen() {
   const weekly = last7DaysCounts(sessions);
   const score = consistencyScore(sessions);
   const { current } = computeStreak(sessions);
-  const freq = techniqueFrequency(sessions);
-  const topTechnique = Object.entries(freq).sort((a, b) => b[1] - a[1])[0];
+  const freq = activityFrequency(sessions);
+  const topActivity = Object.entries(freq).sort((a, b) => b[1] - a[1])[0];
 
   const maxCount = Math.max(1, ...weekly.map((w) => w.count));
   const barWidth =
@@ -111,9 +111,9 @@ export default function AnalyzeScreen() {
           </View>
           <View style={styles.statBox}>
             <Text style={styles.statNumber} numberOfLines={1}>
-              {topTechnique ? topTechnique[0] : "—"}
+              {topActivity ? topActivity[0] : "—"}
             </Text>
-            <Text style={styles.statLabel}>Most used technique</Text>
+            <Text style={styles.statLabel}>Most used activity</Text>
           </View>
         </View>
       </ScrollView>

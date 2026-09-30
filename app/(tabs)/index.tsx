@@ -4,29 +4,29 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import CircularTimer from "@/components/CircularTimer";
 import ToggleList from "@/components/ToggleList";
 import MediaPlayer from "@/components/MediaPlayer";
-import { Technique, Session } from "@/types";
-import { getTechniques, saveTechniques, addSession } from "@/utils/storage";
+import { Activity, Session } from "@/types";
+import { getActivities, saveActivities, addSession } from "@/utils/storage";
 import { colors, spacing, typography } from "@/constants/theme";
 import { toLocalDateISO } from "@/utils/date";
 
 const SESSION_LENGTH_SEC = 1 * 10; // 5 minute default session
 
 export default function HomeScreen() {
-  const [techniques, setTechniques] = useState<Technique[]>([]);
+  const [activities, setActivities] = useState<Activity[]>([]);
 
   useEffect(() => {
-    getTechniques().then(setTechniques);
+    getActivities().then(setActivities);
   }, []);
 
   const handleToggle = useCallback(
     async (id: string) => {
-      const updated = techniques.map((t) =>
-        t.id === id ? { ...t, enabled: !t.enabled } : t,
+      const updated = activities.map((a) =>
+        a.id === id ? { ...a, enabled: !a.enabled } : a,
       );
-      setTechniques(updated);
-      await saveTechniques(updated);
+      setActivities(updated);
+      await saveActivities(updated);
     },
-    [techniques],
+    [activities],
   );
 
   const handleComplete = useCallback(
@@ -37,7 +37,7 @@ export default function HomeScreen() {
         dateISO: toLocalDateISO(now),
         timestamp: now.getTime(),
         durationSec: elapsedSec,
-        techniques: techniques.filter((t) => t.enabled).map((t) => t.label),
+        activities: activities.filter((a) => a.enabled).map((a) => a.label),
       };
       await addSession(session);
       Alert.alert(
@@ -45,7 +45,7 @@ export default function HomeScreen() {
         "Nice work — this session was added to your tracker.",
       );
     },
-    [techniques],
+    [activities],
   );
 
   return (
@@ -65,7 +65,7 @@ export default function HomeScreen() {
           />
         </View>
 
-        <ToggleList techniques={techniques} onToggle={handleToggle} />
+        <ToggleList activities={activities} onToggle={handleToggle} />
       </ScrollView>
     </SafeAreaView>
   );

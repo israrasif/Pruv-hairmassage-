@@ -1,25 +1,25 @@
 import React from "react";
 import { View, Text, Switch, StyleSheet } from "react-native";
-import { Technique } from "@/types";
+import { Activity } from "@/types";
 import { colors, spacing, typography, radii } from "@/constants/theme";
 
 interface Props {
-  techniques: Technique[];
+  activities: Activity[];
   onToggle: (id: string) => void;
 }
 
-export default function ToggleList({ techniques, onToggle }: Props) {
+export default function ToggleList({ activities, onToggle }: Props) {
   return (
     <View style={styles.container}>
       <Text style={styles.heading}>{"Today's focus"}</Text>
-      {techniques.map((t) => (
-        <View key={t.id} style={styles.row}>
-          <Text style={styles.label}>{t.label}</Text>
+      {activities.map((a) => (
+        <View key={a.id} style={styles.row}>
+          <Text style={styles.label}>{a.label}</Text>
           <Switch
-            value={t.enabled}
-            onValueChange={() => onToggle(t.id)}
+            value={a.enabled}
+            onValueChange={() => onToggle(a.id)}
             trackColor={{ false: colors.track, true: colors.secondary }}
-            thumbColor={t.enabled ? colors.primary : "#fff"}
+            thumbColor={a.enabled ? colors.primary : "#fff"}
           />
         </View>
       ))}

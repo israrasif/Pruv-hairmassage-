@@ -16,12 +16,12 @@ export const env = {
     "EXPO_PUBLIC_SUPABASE_ANON_KEY",
     process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
   ),
-  revenueCatAndroidKey: required(
-    "EXPO_PUBLIC_REVENUECAT_ANDROID_KEY",
-    process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY,
-  ),
-  revenueCatIosKey: required(
-    "EXPO_PUBLIC_REVENUECAT_IOS_KEY",
-    process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY,
-  ),
+  // revenueCatAndroidKey: required(
+  //   "EXPO_PUBLIC_REVENUECAT_ANDROID_KEY",
+  //   process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY,
+  // ),
+  // revenueCatIosKey: required(
+  //   "EXPO_PUBLIC_REVENUECAT_IOS_KEY",
+  //   process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY,
+  // ),
 };

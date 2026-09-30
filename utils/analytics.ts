@@ -68,13 +68,11 @@ export function consistencyScore(sessions: Session[]): number {
   return Math.round((hit / 14) * 100);
 }
 
-export function techniqueFrequency(
-  sessions: Session[],
-): Record<string, number> {
+export function activityFrequency(sessions: Session[]): Record<string, number> {
   const freq: Record<string, number> = {};
   sessions.forEach((s) => {
-    s.techniques.forEach((t) => {
-      freq[t] = (freq[t] || 0) + 1;
+    s.activities.forEach((a) => {
+      freq[a] = (freq[a] || 0) + 1;
     });
   });
   return freq;

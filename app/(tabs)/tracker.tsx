@@ -136,12 +136,12 @@ export default function TrackerScreen() {
                 </Text>
               </View>
               <View style={styles.chipRow}>
-                {s.techniques.length === 0 ? (
-                  <Text style={styles.emptyText}>No techniques selected</Text>
+                {s.activities.length === 0 ? (
+                  <Text style={styles.emptyText}>No activities selected</Text>
                 ) : (
-                  s.techniques.map((t) => (
-                    <View key={t} style={styles.chip}>
-                      <Text style={styles.chipText}>{t}</Text>
+                  s.activities.map((a) => (
+                    <View key={a} style={styles.chip}>
+                      <Text style={styles.chipText}>{a}</Text>
                     </View>
                   ))
                 )}

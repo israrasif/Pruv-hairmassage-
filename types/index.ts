@@ -1,4 +1,4 @@
-export interface Technique {
+export interface Activity {
   id: string;
   label: string;
   enabled: boolean;
@@ -9,7 +9,7 @@ export interface Session {
   dateISO: string; // e.g. 2026-09-24
   timestamp: number;
   durationSec: number;
-  techniques: string[]; // labels of techniques enabled during this session
+  activities: string[]; // labels of activities enabled during this session
 }
 
 export interface VaultPhoto {

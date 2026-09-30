@@ -3,48 +3,65 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 // expo-file-system. Our code uses the older documentDirectory/copyAsync
 // style API, which is still fully supported under this legacy entrypoint.
 import * as FileSystem from "expo-file-system/legacy";
-import { Session, Technique, VaultPhoto, Thread } from "@/types";
+import { Session, Activity, VaultPhoto, Thread } from "@/types";
 import { toLocalDateISO } from "./date";
 
 const KEYS = {
   SESSIONS: "@hair_massage/sessions",
-  TECHNIQUES: "@hair_massage/techniques",
+  ACTIVITIES: "@hair_massage/activities",
   VAULT: "@hair_massage/vault",
   THREADS: "@hair_massage/threads",
 };
 
+// Key used before the Technique -> Activity rename. Read once as a fallback so
+// existing on-device preferences are not lost.
+const LEGACY_TECHNIQUES_KEY = "@hair_massage/techniques";
+
 const VAULT_DIR = FileSystem.documentDirectory + "vault/";
 
-// ---------- Techniques / Preferences ----------
+// ---------- Activities / Preferences ----------
 
-export const DEFAULT_TECHNIQUES: Technique[] = [
+export const DEFAULT_ACTIVITIES: Activity[] = [
   { id: "scalp", label: "Scalp Massage", enabled: true },
   { id: "oil", label: "Oil Treatment", enabled: true },
   { id: "steam", label: "Steam Therapy", enabled: false },
   { id: "postwash", label: "Post-Wash Care", enabled: false },
 ];
 
-export async function getTechniques(): Promise<Technique[]> {
-  const raw = await AsyncStorage.getItem(KEYS.TECHNIQUES);
-  if (!raw) return DEFAULT_TECHNIQUES;
+export async function getActivities(): Promise<Activity[]> {
+  const raw =
+    (await AsyncStorage.getItem(KEYS.ACTIVITIES)) ??
+    (await AsyncStorage.getItem(LEGACY_TECHNIQUES_KEY));
+  if (!raw) return DEFAULT_ACTIVITIES;
   try {
-    return JSON.parse(raw) as Technique[];
+    return JSON.parse(raw) as Activity[];
   } catch {
-    return DEFAULT_TECHNIQUES;
+    return DEFAULT_ACTIVITIES;
   }
 }
 
-export async function saveTechniques(techniques: Technique[]): Promise<void> {
-  await AsyncStorage.setItem(KEYS.TECHNIQUES, JSON.stringify(techniques));
+export async function saveActivities(activities: Activity[]): Promise<void> {
+  await AsyncStorage.setItem(KEYS.ACTIVITIES, JSON.stringify(activities));
 }
 
 // ---------- Sessions ----------
+
+// Sessions saved before the rename have a `techniques` field instead of
+// `activities`. Normalise them on read so old data keeps working.
+type StoredSession = Omit<Session, "activities"> & {
+  activities?: string[];
+  techniques?: string[];
+};
 
 export async function getSessions(): Promise<Session[]> {
   const raw = await AsyncStorage.getItem(KEYS.SESSIONS);
   if (!raw) return [];
   try {
-    return JSON.parse(raw) as Session[];
+    const stored = JSON.parse(raw) as StoredSession[];
+    return stored.map(({ techniques, ...rest }) => ({
+      ...rest,
+      activities: rest.activities ?? techniques ?? [],
+    }));
   } catch {
     return [];
   }
