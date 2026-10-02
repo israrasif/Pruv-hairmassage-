@@ -20,6 +20,7 @@ import {
   deleteVaultPhoto,
 } from "@/utils/storage";
 import { colors, spacing, typography, radii } from "@/constants/theme";
+import TopBar from "@/components/TopBar";
 
 const NUM_COLUMNS = 3;
 const GAP = 6;
@@ -87,6 +88,7 @@ export default function VaultScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
+      <TopBar />
       <View style={styles.header}>
         <Text style={styles.title}>Progress Vault</Text>
         <Text style={styles.subtitle}>

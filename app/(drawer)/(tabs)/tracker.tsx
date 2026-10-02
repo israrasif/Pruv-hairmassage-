@@ -7,6 +7,7 @@ import { getSessions } from "@/utils/storage";
 import { computeStreak } from "@/utils/analytics";
 import { daysAgoISO } from "@/utils/date";
 import { colors, spacing, typography, radii } from "@/constants/theme";
+import TopBar from "@/components/TopBar";
 
 const DAYS_TO_SHOW = 30;
 
@@ -66,6 +67,7 @@ export default function TrackerScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
+      <TopBar />
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.title}>Your Streak</Text>
         <Text style={styles.subtitle}>

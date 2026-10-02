@@ -8,6 +8,7 @@ import { Activity, Session } from "@/types";
 import { getActivities, saveActivities, addSession } from "@/utils/storage";
 import { colors, spacing, typography } from "@/constants/theme";
 import { toLocalDateISO } from "@/utils/date";
+import TopBar from "@/components/TopBar";
 
 const SESSION_LENGTH_SEC = 1 * 10; // 5 minute default session
 
@@ -50,6 +51,7 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
+      <TopBar />
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.title}>Daily Hair Massage</Text>
         <Text style={styles.subtitle}>

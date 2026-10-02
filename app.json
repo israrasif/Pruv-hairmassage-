@@ -10,7 +10,7 @@
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#FDF8F5"
+      "backgroundColor": "#FFFFFF"
     },
     "assetBundlePatterns": [
       "**/*"
@@ -23,7 +23,12 @@
       "package": "com.growmo.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#FDF8F5"
+        "backgroundColor": "#FFFFFF"
+      },
+      "splash": {
+        "image": "./assets/splash-icon.png",
+        "resizeMode": "contain",
+        "backgroundColor": "#FFFFFF"
       },
       "permissions": [
         "android.permission.CAMERA"
@@ -50,6 +55,9 @@
     "extra": {
       "router": {
         "origin": false
+      },
+      "eas": {
+        "projectId": "6f766835-d5c2-4e70-885c-50f2dec0fe0c"
       }
     }
   }

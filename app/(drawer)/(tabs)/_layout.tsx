@@ -18,18 +18,9 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Massage",
+          title: "Home",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="timer-outline" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="vault"
-        options={{
-          title: "Vault",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="images-outline" size={size} color={color} />
           ),
         }}
       />
@@ -43,11 +34,11 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="community"
+        name="vault"
         options={{
-          title: "Community",
+          title: "Photos",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="people-outline" size={size} color={color} />
+            <Ionicons name="images-outline" size={size} color={color} />
           ),
         }}
       />

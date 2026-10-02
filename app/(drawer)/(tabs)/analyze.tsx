@@ -11,6 +11,7 @@ import {
   activityFrequency,
 } from "@/utils/analytics";
 import { colors, spacing, typography, radii } from "@/constants/theme";
+import TopBar from "@/components/TopBar";
 
 const CHART_WIDTH = Dimensions.get("window").width - spacing.lg * 2;
 const CHART_HEIGHT = 160;
@@ -52,6 +53,7 @@ export default function AnalyzeScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
+      <TopBar />
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.title}>Progress Analysis</Text>
         <Text style={styles.subtitle}>
