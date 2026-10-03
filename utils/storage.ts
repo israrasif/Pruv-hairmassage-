@@ -28,6 +28,16 @@ export const DEFAULT_ACTIVITIES: Activity[] = [
   { id: "postwash", label: "Post-Wash Care", enabled: false },
 ];
 
+export const ACTIVITY_CATALOG: Activity[] = [
+  ...DEFAULT_ACTIVITIES,
+  { id: "exfoliate", label: "Scalp Exfoliation", enabled: false },
+  { id: "dermaroll", label: "Derma Rolling", enabled: false },
+  { id: "comb", label: "Wooden Comb Massage", enabled: false },
+  { id: "mask", label: "Hair Mask", enabled: false },
+  { id: "serum", label: "Scalp Serum", enabled: false },
+  { id: "rinse", label: "Herbal Rinse", enabled: false },
+];
+
 export async function getActivities(): Promise<Activity[]> {
   const raw =
     (await AsyncStorage.getItem(KEYS.ACTIVITIES)) ??

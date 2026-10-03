@@ -1,6 +1,7 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import { View, Text, StyleSheet, ScrollView, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useFocusEffect } from "expo-router";
 import CircularTimer from "@/components/CircularTimer";
 import ToggleList from "@/components/ToggleList";
 import MediaPlayer from "@/components/MediaPlayer";
@@ -15,9 +16,12 @@ const SESSION_LENGTH_SEC = 1 * 10; // 5 minute default session
 export default function HomeScreen() {
   const [activities, setActivities] = useState<Activity[]>([]);
 
-  useEffect(() => {
-    getActivities().then(setActivities);
-  }, []);
+  // Reload on focus so edits made in Settings show up (this screen stays mounted in the drawer).
+  useFocusEffect(
+    useCallback(() => {
+      getActivities().then(setActivities);
+    }, []),
+  );
 
   const handleToggle = useCallback(
     async (id: string) => {
