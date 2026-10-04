@@ -12,6 +12,7 @@ import {
 } from "@/utils/analytics";
 import { colors, spacing, typography, radii } from "@/constants/theme";
 import TopBar from "@/components/TopBar";
+import HairScanCard from "@/components/HairScanCard"
 
 const CHART_WIDTH = Dimensions.get("window").width - spacing.lg * 2;
 const CHART_HEIGHT = 160;
@@ -59,7 +60,7 @@ export default function AnalyzeScreen() {
         <Text style={styles.subtitle}>
           A rough read on whether the routine is working for you.
         </Text>
-
+        <HairScanCard />
         <View style={styles.scoreCard}>
           <Text style={styles.scoreNumber}>{score}%</Text>
           <Text style={styles.scoreLabel}>Consistency (last 14 days)</Text>
