@@ -21,6 +21,7 @@ import {
 } from "@/utils/storage";
 import { colors, spacing, typography, radii } from "@/constants/theme";
 import TopBar from "@/components/TopBar";
+import { syncVaultPhotos, queueRemoteDelete } from "@/utils/vaultSync";
 
 const NUM_COLUMNS = 3;
 const GAP = 6;
@@ -38,6 +39,7 @@ export default function VaultScreen() {
 
   useEffect(() => {
     load();
+    syncVaultPhotos().then((list) => list && setPhotos(list));
   }, [load]);
 
   const captureFromCamera = async () => {
@@ -57,6 +59,7 @@ export default function VaultScreen() {
     if (!result.canceled && result.assets[0]) {
       const updated = await addVaultPhoto(result.assets[0].uri);
       setPhotos(updated);
+      syncVaultPhotos().then((list) => list && setPhotos(list));
     }
   };
 
@@ -77,6 +80,7 @@ export default function VaultScreen() {
     if (!result.canceled && result.assets[0]) {
       const updated = await addVaultPhoto(result.assets[0].uri);
       setPhotos(updated);
+      syncVaultPhotos().then((list) => list && setPhotos(list));
     }
   };
 
@@ -84,15 +88,16 @@ export default function VaultScreen() {
     setSelected(null);
     const updated = await deleteVaultPhoto(id);
     setPhotos(updated);
+    await queueRemoteDelete(id);
+    syncVaultPhotos().then((list) => list && setPhotos(list));
   };
-
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <TopBar />
       <View style={styles.header}>
         <Text style={styles.title}>Progress Vault</Text>
         <Text style={styles.subtitle}>
-          Private, on-device photo log of your hair over time.
+          Private photo log, backed up to your account.
         </Text>
       </View>
 
@@ -141,6 +146,22 @@ export default function VaultScreen() {
                   borderRadius: radii.sm,
                 }}
               />
+              <View
+                style={[
+                  styles.syncBadge,
+                  {
+                    backgroundColor: item.synced
+                      ? "rgba(0,0,0,0.45)"
+                      : "rgba(224,160,48,0.95)",
+                  },
+                ]}
+              >
+                <Ionicons
+                  name={item.synced ? "cloud-done" : "cloud-offline-outline"}
+                  size={13}
+                  color="#fff"
+                />
+              </View>
             </Pressable>
           )}
         />
@@ -250,4 +271,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.track,
   },
   modalBtnText: { fontWeight: "600", color: colors.text },
+  syncBadge: {
+    position: "absolute",
+    right: 4,
+    bottom: 4,
+    borderRadius: 10,
+    padding: 3,
+  },
 });
+
+

@@ -57,7 +57,7 @@ export default function LoginScreen() {
         style={styles.container}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        <Text style={styles.title}>Daily Hair Massage</Text>
+        <Text style={styles.title}>Growmo</Text>
         <Text style={styles.subtitle}>
           {mode === "signin" ? "Sign in to continue" : "Create your account"}
         </Text>

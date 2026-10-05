@@ -18,6 +18,7 @@ export interface VaultPhoto {
   dateISO: string;
   timestamp: number;
   note?: string;
+  synced?: boolean;
 }
 
 export interface ThreadMessage {

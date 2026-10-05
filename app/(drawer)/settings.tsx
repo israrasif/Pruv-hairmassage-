@@ -14,9 +14,18 @@ import { useFocusEffect } from "expo-router";
 import TopBar from "@/components/TopBar";
 import { colors, radii, spacing, typography } from "@/constants/theme";
 import { Activity } from "@/types";
-import { ACTIVITY_CATALOG, getActivities, saveActivities } from "@/utils/storage";
+import {
+  ACTIVITY_CATALOG,
+  getActivities,
+  saveActivities,
+} from "@/utils/storage";
 import { supabase } from "@/utils/supabase";
 import { displayName, useUser } from "@/utils/useUser";
+import {
+  syncVaultPhotos,
+  countUnsyncedPhotos,
+  clearLocalVault,
+} from "@/utils/vaultSync";
 
 const MAX_LABEL = 30;
 
@@ -48,7 +57,10 @@ export default function SettingsScreen() {
 
   const removeFromList = async (item: Activity) => {
     if (activities.length === 1) {
-      Alert.alert("Keep at least one", "Your list needs at least one activity.");
+      Alert.alert(
+        "Keep at least one",
+        "Your list needs at least one activity.",
+      );
       return;
     }
     await persist(activities.filter((a) => a.id !== item.id));
@@ -65,7 +77,11 @@ export default function SettingsScreen() {
       "It will be removed from your list. Past sessions keep their history.",
       [
         { text: "Cancel", style: "cancel" },
-        { text: "Delete", style: "destructive", onPress: () => removeFromList(item) },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => removeFromList(item),
+        },
       ],
     );
   };
@@ -91,21 +107,50 @@ export default function SettingsScreen() {
     setDraft("");
   };
 
-  const confirmSignOut = () => {
-    Alert.alert("Sign out?", "You'll need to sign in again to use the app.", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Sign out",
-        style: "destructive",
-        onPress: async () => {
-          const { error } = await supabase.auth.signOut();
-          if (error) Alert.alert("Couldn't sign out", error.message);
-          // The auth guard in app/_layout.tsx sends the user to the login screen.
-        },
-      },
-    ]);
+  const finishSignOut = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      Alert.alert("Couldn't sign out", error.message);
+      return;
+    }
+    await clearLocalVault();
   };
 
+  const confirmSignOut = () => {
+    Alert.alert(
+      "Sign out?",
+      "Your photos stay in your account and come back when you sign in again.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Sign out",
+          style: "destructive",
+          onPress: async () => {
+            // Back up anything still waiting before the local copy is cleared
+            await syncVaultPhotos();
+            const waiting = await countUnsyncedPhotos();
+            if (waiting > 0) {
+              Alert.alert(
+                "Some photos aren't backed up",
+                `${waiting} photo${waiting === 1 ? " hasn't" : "s haven't"} been uploaded yet (maybe you're offline). Signing out will delete ${waiting === 1 ? "it" : "them"} from this phone.`,
+                [
+                  { text: "Cancel", style: "cancel" },
+                  {
+                    text: "Sign out anyway",
+                    style: "destructive",
+                    onPress: finishSignOut,
+                  },
+                ],
+              );
+              return;
+            }
+            await finishSignOut();
+          },
+        },
+      ],
+    );
+  };
+  
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <TopBar />
@@ -118,13 +163,15 @@ export default function SettingsScreen() {
         <Text style={styles.sectionHeading}>Account</Text>
         <View style={styles.card}>
           <Text style={styles.accountName}>{displayName(user)}</Text>
-          {user?.email ? <Text style={styles.accountEmail}>{user.email}</Text> : null}
+          {user?.email ? (
+            <Text style={styles.accountEmail}>{user.email}</Text>
+          ) : null}
         </View>
 
         <Text style={styles.sectionHeading}>Your activities</Text>
         <Text style={styles.hint}>
-          Choose which activities appear in {'"Today\'s focus"'} on the Home screen,
-          or add your own.
+          Choose which activities appear in {'"Today\'s focus"'} on the Home
+          screen, or add your own.
         </Text>
         <View style={styles.card}>
           {options.map((a) => {
@@ -133,7 +180,9 @@ export default function SettingsScreen() {
             return (
               <Pressable
                 key={a.id}
-                onPress={() => (custom ? confirmDeleteCustom(a) : toggleInList(a))}
+                onPress={() =>
+                  custom ? confirmDeleteCustom(a) : toggleInList(a)
+                }
                 style={styles.row}
                 accessibilityRole={custom ? "button" : "checkbox"}
                 accessibilityState={custom ? undefined : { checked: selected }}
@@ -144,7 +193,11 @@ export default function SettingsScreen() {
                   {custom ? <Text style={styles.customTag}>Custom</Text> : null}
                 </View>
                 {custom ? (
-                  <Ionicons name="trash-outline" size={22} color={colors.danger} />
+                  <Ionicons
+                    name="trash-outline"
+                    size={22}
+                    color={colors.danger}
+                  />
                 ) : (
                   <Ionicons
                     name={selected ? "checkmark-circle" : "ellipse-outline"}
@@ -204,7 +257,11 @@ const styles = StyleSheet.create({
     marginTop: spacing.xl,
     marginBottom: spacing.sm,
   },
-  hint: { ...typography.caption, color: colors.textMuted, marginBottom: spacing.sm },
+  hint: {
+    ...typography.caption,
+    color: colors.textMuted,
+    marginBottom: spacing.sm,
+  },
   card: {
     backgroundColor: colors.surface,
     borderRadius: radii.lg,
@@ -227,7 +284,12 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
-  rowText: { flex: 1, flexDirection: "row", alignItems: "center", gap: spacing.sm },
+  rowText: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
   rowLabel: { ...typography.body, color: colors.text, flexShrink: 1 },
   customTag: {
     ...typography.caption,

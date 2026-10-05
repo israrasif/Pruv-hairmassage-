@@ -24,12 +24,37 @@ const METRICS: { key: keyof Scan; label: string }[] = [
 const formatDate = (iso: string) =>
   new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short" });
 
+const formatDateTime = (iso: string) => {
+  const d = new Date(iso);
+  return `${d.toLocaleDateString(undefined, { day: "numeric", month: "short" })} · ${d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}`;
+};
+
+function MetricBars({ scan }: { scan: Scan }) {
+  return (
+    <>
+      {METRICS.map((m) => {
+        const value = Number(scan[m.key]) || 0;
+        return (
+          <View key={m.key} style={styles.metricRow}>
+            <Text style={styles.metricLabel}>{m.label}</Text>
+            <View style={styles.barTrack}>
+              <View style={[styles.barFill, { width: `${value * 10}%` }]} />
+            </View>
+            <Text style={styles.metricValue}>{value}</Text>
+          </View>
+        );
+      })}
+    </>
+  );
+}
+
 export default function HairScanCard() {
   const [scans, setScans] = useState<Scan[]>([]);
   const [busy, setBusy] = useState(false);
   const [previewUri, setPreviewUri] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [tip, setTip] = useState<string | null>(null);
+  const [openId, setOpenId] = useState<string | null>(null);
 
   const loadScans = useCallback(async () => {
     try {
@@ -84,7 +109,8 @@ export default function HairScanCard() {
   };
 
   const latest = scans.length ? scans[scans.length - 1] : null;
-  const recent = scans.slice(-5).reverse();
+  // Everything except the latest scan (shown above), newest first, last 10
+  const previous = scans.slice(0, -1).slice(-10).reverse();
 
   return (
     <View style={styles.card}>
@@ -134,18 +160,7 @@ export default function HairScanCard() {
             <Text style={styles.overallLabel}>Overall · {formatDate(latest.created_at)}</Text>
           </View>
 
-          {METRICS.map((m) => {
-            const value = Number(latest[m.key]) || 0;
-            return (
-              <View key={m.key} style={styles.metricRow}>
-                <Text style={styles.metricLabel}>{m.label}</Text>
-                <View style={styles.barTrack}>
-                  <View style={[styles.barFill, { width: `${value * 10}%` }]} />
-                </View>
-                <Text style={styles.metricValue}>{value}</Text>
-              </View>
-            );
-          })}
+          <MetricBars scan={latest} />
 
           {!!latest.notes && <Text style={styles.notes}>{latest.notes}</Text>}
           {!!latest.photo_tips && (
@@ -154,15 +169,39 @@ export default function HairScanCard() {
         </View>
       )}
 
-      {!busy && recent.length > 1 && (
+      {!busy && previous.length > 0 && (
         <View style={{ marginTop: spacing.lg }}>
-          <Text style={styles.historyHeading}>Recent scans</Text>
-          {recent.map((s) => (
-            <View key={s.id} style={styles.historyRow}>
-              <Text style={styles.historyDate}>{formatDate(s.created_at)}</Text>
-              <Text style={styles.historyScore}>{s.overall}/10</Text>
-            </View>
-          ))}
+          <Text style={styles.historyHeading}>Previous scans</Text>
+          {previous.map((s) => {
+            const open = openId === s.id;
+            return (
+              <View key={s.id} style={styles.historyItem}>
+                <Pressable
+                  style={styles.historyRow}
+                  onPress={() => setOpenId(open ? null : s.id)}
+                  accessibilityRole="button"
+                  accessibilityState={{ expanded: open }}
+                >
+                  <Text style={styles.historyDate}>{formatDateTime(s.created_at)}</Text>
+                  <View style={styles.historyRight}>
+                    <Text style={styles.historyScore}>{s.overall}/10</Text>
+                    <Ionicons
+                      name={open ? "chevron-up" : "chevron-down"}
+                      size={18}
+                      color={colors.textMuted}
+                    />
+                  </View>
+                </Pressable>
+
+                {open && (
+                  <View style={styles.historyDetail}>
+                    <MetricBars scan={s} />
+                    {!!s.notes && <Text style={styles.notes}>{s.notes}</Text>}
+                  </View>
+                )}
+              </View>
+            );
+          })}
         </View>
       )}
 
@@ -241,12 +280,19 @@ const styles = StyleSheet.create({
   },
   notes: { ...typography.body, color: colors.text, marginTop: spacing.md, lineHeight: 21 },
   historyHeading: { ...typography.h3, color: colors.text, marginBottom: spacing.xs },
+  historyItem: {
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
   historyRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingVertical: 4,
+    alignItems: "center",
+    paddingVertical: spacing.sm + 2,
   },
+  historyRight: { flexDirection: "row", alignItems: "center", gap: spacing.xs },
   historyDate: { ...typography.body, color: colors.textMuted },
   historyScore: { ...typography.body, color: colors.text, fontWeight: "600" },
+  historyDetail: { paddingBottom: spacing.md },
   disclaimer: { ...typography.caption, color: colors.textMuted, marginTop: spacing.lg },
 });

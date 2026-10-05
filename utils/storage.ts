@@ -86,11 +86,19 @@ export async function addSession(session: Session): Promise<Session[]> {
 
 // ---------- Vault (photos) ----------
 
-async function ensureVaultDir() {
+export async function ensureVaultDir() {
   const info = await FileSystem.getInfoAsync(VAULT_DIR);
   if (!info.exists) {
     await FileSystem.makeDirectoryAsync(VAULT_DIR, { intermediates: true });
   }
+}
+
+export function vaultFileUri(id: string) {
+  return `${VAULT_DIR}${id}.jpg`;
+}
+
+export async function saveVaultPhotos(photos: VaultPhoto[]): Promise<void> {
+  await AsyncStorage.setItem(KEYS.VAULT, JSON.stringify(photos));
 }
 
 export async function getVaultPhotos(): Promise<VaultPhoto[]> {
