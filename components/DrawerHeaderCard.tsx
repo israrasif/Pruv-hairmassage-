@@ -7,16 +7,18 @@ import { displayName, useUser } from "@/utils/useUser";
 const PLAN_LABEL: Record<Plan, string> = {
   free: "Free",
   plus: "Plus",
-  premium: "Premium",
 };
 
 const BADGE: Record<Plan, { bg: string; fg: string }> = {
   free: { bg: colors.track, fg: colors.textMuted },
   plus: { bg: colors.accent, fg: colors.primaryDark },
-  premium: { bg: colors.primary, fg: "#fff" },
 };
 
-export default function DrawerHeaderCard({ onPress }: { onPress?: () => void }) {
+export default function DrawerHeaderCard({
+  onPress,
+}: {
+  onPress?: () => void;
+}) {
   const user = useUser();
   const { plan, expiresAt, isTrial } = usePlanInfo();
 

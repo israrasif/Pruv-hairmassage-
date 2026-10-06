@@ -28,14 +28,7 @@ const TIERS = [
       "Routine builder",
       "Weekly research digest and recap",
     ],
-  },
-  {
-    key: "premium",
-    name: "Premium",
-    price: "$12-15 / month",
-    perks: ["Everything in Plus", "Community", "Expert Q&A", "Deeper research"],
-    note: "Founding-member offer, opens later",
-  },
+  }
 ];
 
 export default function PlansScreen() {

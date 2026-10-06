@@ -4,20 +4,24 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { usePathname, useRouter, type Href } from "expo-router";
 import { colors, radii, spacing, typography } from "@/constants/theme";
-import { hasPlus, hasPremium, usePlan } from "@/utils/entitlements";
+import { hasPlus, usePlan } from "@/utils/entitlements";
 
 type Item = {
   label: string;
   icon: keyof typeof Ionicons.glyphMap;
   href: Href;
-  tag?: "Plus" | "Premium";
+  tag?: "Plus";
 };
 
 const MAIN_ITEMS: Item[] = [
   { label: "Home", icon: "home-outline", href: "/" },
   { label: "Research", icon: "book-outline", href: "/research" },
-  { label: "Routine builder", icon: "list-outline", href: "/routine", tag: "Plus" },
-  { label: "Community", icon: "people-outline", href: "/community", tag: "Premium" },
+  {
+    label: "Routine builder",
+    icon: "list-outline",
+    href: "/routine",
+    tag: "Plus",
+  }
 ];
 
 // Home owns the whole bottom tab bar, so it counts as active on any of these.
@@ -38,9 +42,7 @@ export default function DrawerContent(props: Props) {
   const pathname = usePathname();
   const plan = usePlan();
 
-  const isLocked = (tag?: Item["tag"]) =>
-    (tag === "Plus" && !hasPlus(plan)) ||
-    (tag === "Premium" && !hasPremium(plan));
+  const isLocked = (tag?: Item["tag"]) => tag === "Plus" && !hasPlus(plan);
 
   const go = (item: Item) => {
     props.navigation.closeDrawer();
@@ -79,11 +81,16 @@ export default function DrawerContent(props: Props) {
 
   return (
     <ScrollView
-      contentContainerStyle={[styles.container, { paddingTop: insets.top + spacing.sm }]}
+      contentContainerStyle={[
+        styles.container,
+        { paddingTop: insets.top + spacing.sm },
+      ]}
     >
       {!hasPlus(plan) && (
         <Pressable
-          onPress={() => go({ label: "Plans", icon: "ribbon-outline", href: "/plans" })}
+          onPress={() =>
+            go({ label: "Plans", icon: "ribbon-outline", href: "/plans" })
+          }
           style={styles.upgrade}
           accessibilityRole="button"
         >

@@ -10,9 +10,11 @@ import {
   View,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
+import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, radii, spacing, typography } from "@/constants/theme";
 import { analyzeHairPhoto, fetchScans, type Scan } from "@/utils/analyzeHair";
+import { hasPlus, usePlan } from "@/utils/entitlements";
 
 const METRICS: { key: keyof Scan; label: string }[] = [
   { key: "density", label: "Density" },
@@ -49,6 +51,8 @@ function MetricBars({ scan }: { scan: Scan }) {
 }
 
 export default function HairScanCard() {
+  const router = useRouter();
+  const plan = usePlan();
   const [scans, setScans] = useState<Scan[]>([]);
   const [busy, setBusy] = useState(false);
   const [previewUri, setPreviewUri] = useState<string | null>(null);
@@ -107,6 +111,28 @@ export default function HairScanCard() {
       setError(res.message);
     }
   };
+
+  // AI hair check is a Plus feature (the Edge Function enforces this too)
+  if (!hasPlus(plan)) {
+    return (
+      <View style={styles.card}>
+        <View style={styles.lockRow}>
+          <Ionicons name="lock-closed" size={18} color={colors.primaryDark} />
+          <Text style={styles.heading}>AI hair check</Text>
+        </View>
+        <Text style={styles.sub}>
+          Photo-based hair scoring and progress tracking are part of Plus.
+        </Text>
+        <Pressable
+          style={[styles.button, { marginTop: spacing.md }]}
+          onPress={() => router.push("/plans")}
+          accessibilityRole="button"
+        >
+          <Text style={styles.buttonText}>See Plus</Text>
+        </Pressable>
+      </View>
+    );
+  }
 
   const latest = scans.length ? scans[scans.length - 1] : null;
   // Everything except the latest scan (shown above), newest first, last 10
@@ -222,6 +248,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   heading: { ...typography.h3, color: colors.text },
+  lockRow: { flexDirection: "row", alignItems: "center", gap: spacing.xs },
   sub: { ...typography.body, color: colors.textMuted, marginTop: spacing.xs },
   buttonRow: { flexDirection: "row", gap: spacing.sm, marginTop: spacing.md },
   button: {
