@@ -5,6 +5,11 @@
   "maxMinutesPerDay": 20,
   "maxTasksPerWeek": 3,
   "minMinutesPerZone": 1,
+  "adjust": {
+    "_help": "How far a person can move the days-per-week setting. People with heavy shedding or a sensitive scalp can't go above their plan's own cap.",
+    "minDays": 2,
+    "maxDays": 6
+  },
   "pressureRule": "Press firmly enough that your scalp moves over the skull, but never to the point of pain. If your scalp is sensitive, use a lighter touch with the same slow circles.",
   "levels": {
     "L1": {

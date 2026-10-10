@@ -48,6 +48,7 @@ export type WeekPlan = {
   level: Level;
   minutesPerDay: number;
   daysPerWeek: number;
+  recommendedDays?: number; // what the plan suggested before the person adjusted it
   sessionsPerDay: 1 | 2;
   zoneMinutes: { zone: ZoneId; label: string; minutes: number }[];
   techniques: string[];
@@ -68,6 +69,7 @@ export type Plan = {
   safetyNotes: string[];
   intake: PlanIntake;
   targetLevel: Level;
+  daysOverride?: number; // set when the person chose their own days per week
   weeks: WeekPlan[];
 };
 
@@ -196,10 +198,12 @@ function massageFor(
   sensitive: boolean,
   week: number,
   daysCap: number,
-): Pick<WeekPlan, "level" | "minutesPerDay" | "daysPerWeek" | "sessionsPerDay" | "zoneMinutes" | "techniques"> {
+  daysOverride?: number,
+): Pick<WeekPlan, "level" | "minutesPerDay" | "daysPerWeek" | "recommendedDays" | "sessionsPerDay" | "zoneMinutes" | "techniques"> {
   const lv = config.levels[level];
   const minutes = Math.min(lv.minutes, intake.minutesAvailable, config.maxMinutesPerDay);
-  const days = Math.max(3, Math.min(lv.days, daysCap));
+  const recommendedDays = Math.max(3, Math.min(lv.days, daysCap));
+  const days = daysOverride ?? recommendedDays;
   const split = minutes >= config.ramp.splitSessionsFromMinutes;
   const labels = config.zones as Record<ZoneId, string>;
   const techniques: string[] = sensitive
@@ -213,6 +217,7 @@ function massageFor(
     level,
     minutesPerDay: minutes,
     daysPerWeek: days,
+    recommendedDays,
     sessionsPerDay: split ? 2 : 1,
     zoneMinutes: splitMinutes(minutes, weights, labels, config.minMinutesPerZone ?? 0),
     techniques,
@@ -420,6 +425,13 @@ export function applyReview(config: Config, plan: Plan, action: ReviewAction, fr
   let targetLevel = plan.targetLevel;
   if (action === "step_up" && pc.stepUpTo) targetLevel = pc.stepUpTo as Level;
 
+  // If the person picked their own days per week, keep it, except when the plan is easing off
+  let daysOverride = plan.daysOverride;
+  if (action === "gentle_reset") daysOverride = undefined;
+  if (action === "simplify" && daysOverride != null) {
+    daysOverride = Math.max(config.review.minDaysAfterSimplify, daysOverride - 2);
+  }
+
   const weeks = plan.weeks.map((w) => {
     if (w.week < fromWeek) return w;
     let level: Level = w.level;
@@ -430,8 +442,32 @@ export function applyReview(config: Config, plan: Plan, action: ReviewAction, fr
       level = LEVEL_ORDER[Math.max(0, levelIndex(w.level) - 1)];
       daysCap = Math.max(config.review.minDaysAfterSimplify, w.daysPerWeek - 2);
     }
-    const m = massageFor(config, level, plan.intake, plan.profile, weights, sensitive, w.week, daysCap);
+    const m = massageFor(config, level, plan.intake, plan.profile, weights, sensitive, w.week, daysCap, daysOverride);
     return { ...w, ...m };
   });
-  return { ...plan, targetLevel, weeks };
+  return { ...plan, targetLevel, daysOverride, weeks };
+}
+
+// ----------------------------------------------------- adjust days per week
+/** The most days a person can choose: 6 normally, lower for heavy shedding or a sensitive scalp */
+export function maxAdjustableDays(config: Config, plan: Plan): number {
+  const cap = config.profiles[plan.profile].daysCap as number;
+  const sensitive = plan.tags.includes("sensitive") || plan.profile === "scalp_comfort";
+  const limited = sensitive || plan.profile === "heavy_shedding";
+  return limited ? Math.min(config.adjust.maxDays, cap) : config.adjust.maxDays;
+}
+
+/** Sets the days per week from fromWeek onwards. Minutes, areas and tasks stay as they are. */
+export function setWeeklyDays(config: Config, plan: Plan, days: number, fromWeek: number): Plan {
+  const d = Math.max(config.adjust.minDays, Math.min(maxAdjustableDays(config, plan), Math.round(days)));
+  const weeks = plan.weeks.map((w) => (w.week < fromWeek ? w : { ...w, daysPerWeek: d }));
+  return { ...plan, daysOverride: d, weeks };
+}
+
+/** Goes back to the plan's own suggested days from fromWeek onwards */
+export function resetWeeklyDays(plan: Plan, fromWeek: number): Plan {
+  const weeks = plan.weeks.map((w) =>
+    w.week < fromWeek ? w : { ...w, daysPerWeek: w.recommendedDays ?? w.daysPerWeek },
+  );
+  return { ...plan, daysOverride: undefined, weeks };
 }

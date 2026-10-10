@@ -18,7 +18,10 @@ import {
   buildPlan,
   currentWeek,
   daysDoneInWeek,
+  maxAdjustableDays,
+  resetWeeklyDays,
   reviewPlan,
+  setWeeklyDays,
 } from "@/utils/planBuilder";
 import {
   PlanProgress,
@@ -198,6 +201,24 @@ export default function RoutineScreen() {
     await updateProgress({ ...progress, irritation: false, reviewedWeek: cw });
   };
 
+  // Days per week: the person can change this at any time, from this week onwards
+  const minDays = config?.adjust?.minDays ?? 2;
+  const maxDays = config ? maxAdjustableDays(config, plan) : 6;
+  const recDays = week.recommendedDays ?? week.daysPerWeek;
+
+  const changeDays = async (delta: number) => {
+    if (!config) return;
+    const next = setWeeklyDays(config, plan, week.daysPerWeek + delta, cw);
+    await savePlan(next);
+    setPlan(next);
+  };
+
+  const backToRecommended = async () => {
+    const next = resetWeeklyDays(plan, cw);
+    await savePlan(next);
+    setPlan(next);
+  };
+
   const tick = (id: string) =>
     updateProgress({ ...progress, done: { ...progress.done, [id]: !progress.done[id] } });
 
@@ -245,6 +266,49 @@ export default function RoutineScreen() {
                   {Math.min(daysDone, week.daysPerWeek)} of {week.daysPerWeek} days done
                 </Text>
               </View>
+
+              <View style={styles.adjustRow}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.adjustTitle}>Days per week</Text>
+                  <Text style={styles.adjustHint}>
+                    Changes apply from this week onwards. Recommended: {recDays}.
+                  </Text>
+                </View>
+                <View style={styles.stepper}>
+                  <Pressable
+                    style={[styles.stepBtn, week.daysPerWeek <= minDays && styles.stepBtnOff]}
+                    onPress={() => changeDays(-1)}
+                    disabled={week.daysPerWeek <= minDays}
+                    accessibilityLabel="One day fewer per week"
+                  >
+                    <Text style={styles.stepBtnText}>−</Text>
+                  </Pressable>
+                  <Text style={styles.stepValue}>{week.daysPerWeek}</Text>
+                  <Pressable
+                    style={[styles.stepBtn, week.daysPerWeek >= maxDays && styles.stepBtnOff]}
+                    onPress={() => changeDays(1)}
+                    disabled={week.daysPerWeek >= maxDays}
+                    accessibilityLabel="One more day per week"
+                  >
+                    <Text style={styles.stepBtnText}>+</Text>
+                  </Pressable>
+                </View>
+              </View>
+              {week.daysPerWeek < recDays && (
+                <Text style={styles.adjustNote}>
+                  Fewer days is fine. A steady habit matters more than a perfect one.
+                </Text>
+              )}
+              {week.daysPerWeek > recDays && (
+                <Text style={styles.adjustNote}>
+                  More than recommended. Keep at least one rest day, and ease off if your scalp feels sore.
+                </Text>
+              )}
+              {week.daysPerWeek !== recDays && (
+                <Pressable onPress={backToRecommended}>
+                  <Text style={[styles.link, { marginTop: spacing.xs }]}>Back to recommended ({recDays})</Text>
+                </Pressable>
+              )}
 
               <Text style={styles.label}>Where to spend the time</Text>
               {week.zoneMinutes.map((z) => (
@@ -428,6 +492,23 @@ const styles = StyleSheet.create({
   dot: { width: 14, height: 14, borderRadius: 7, backgroundColor: colors.track },
   dotDone: { backgroundColor: colors.primary },
   dotsText: { ...typography.caption, color: colors.textMuted, marginLeft: spacing.xs },
+  adjustRow: { flexDirection: "row", alignItems: "center", gap: spacing.md, marginTop: spacing.md },
+  adjustTitle: { ...typography.body, color: colors.text, fontWeight: "700" },
+  adjustHint: { ...typography.caption, color: colors.textMuted, marginTop: 2, lineHeight: 17 },
+  adjustNote: { ...typography.caption, color: colors.textMuted, marginTop: spacing.xs, lineHeight: 17 },
+  stepper: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
+  stepBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  stepBtnOff: { opacity: 0.3 },
+  stepBtnText: { fontSize: 20, color: colors.primary, lineHeight: 22 },
+  stepValue: { ...typography.h3, color: colors.text, minWidth: 22, textAlign: "center" },
   primaryBtn: { backgroundColor: colors.primary, borderRadius: radii.md, paddingVertical: 13, alignItems: "center", marginTop: spacing.md },
   primaryBtnText: { ...typography.body, color: "#fff", fontWeight: "700" },
   outlineBtn: { borderWidth: 1, borderColor: colors.primary, borderRadius: radii.md, paddingVertical: 12, alignItems: "center", marginTop: spacing.md },
