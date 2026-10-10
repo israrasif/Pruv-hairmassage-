@@ -26,6 +26,9 @@ import {
   countUnsyncedPhotos,
   clearLocalVault,
 } from "@/utils/vaultSync";
+import SessionLengthCard from "@/components/SessionLengthCard";
+import ReminderCard from "@/components/RemindersCard";
+import { syncUserData, clearLocalUserData } from "@/utils/dataSync";
 
 const MAX_LABEL = 30;
 
@@ -114,6 +117,7 @@ export default function SettingsScreen() {
       return;
     }
     await clearLocalVault();
+    await clearLocalUserData();
   };
 
   const confirmSignOut = () => {
@@ -126,13 +130,13 @@ export default function SettingsScreen() {
           text: "Sign out",
           style: "destructive",
           onPress: async () => {
-            // Back up anything still waiting before the local copy is cleared
+            const dataOk = await syncUserData();
             await syncVaultPhotos();
             const waiting = await countUnsyncedPhotos();
-            if (waiting > 0) {
+            if (waiting > 0 || !dataOk) {
               Alert.alert(
-                "Some photos aren't backed up",
-                `${waiting} photo${waiting === 1 ? " hasn't" : "s haven't"} been uploaded yet (maybe you're offline). Signing out will delete ${waiting === 1 ? "it" : "them"} from this phone.`,
+                "Some data isn't backed up",
+                "Some of your data couldn't be uploaded (maybe you're offline). Signing out will delete it from this phone.",
                 [
                   { text: "Cancel", style: "cancel" },
                   {
@@ -150,7 +154,7 @@ export default function SettingsScreen() {
       ],
     );
   };
-  
+
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <TopBar />
@@ -159,7 +163,8 @@ export default function SettingsScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <Text style={styles.title}>Settings</Text>
-
+        <SessionLengthCard />
+        <ReminderCard />
         <Text style={styles.sectionHeading}>Account</Text>
         <View style={styles.card}>
           <Text style={styles.accountName}>{displayName(user)}</Text>

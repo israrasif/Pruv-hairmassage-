@@ -8,6 +8,7 @@ import { computeStreak } from "@/utils/analytics";
 import { daysAgoISO } from "@/utils/date";
 import { colors, spacing, typography, radii } from "@/constants/theme";
 import TopBar from "@/components/TopBar";
+import DailyLogSummary from "@/components/DailyLogSummary";
 
 const DAYS_TO_SHOW = 30;
 
@@ -90,6 +91,7 @@ export default function TrackerScreen() {
         </View>
 
         <Text style={styles.sectionHeading}>Last {DAYS_TO_SHOW} days</Text>
+        <DailyLogSummary dateISO={selectedDay} />
         <View style={styles.grid}>
           {grid.map((cell) => (
             <Pressable

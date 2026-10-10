@@ -2,19 +2,18 @@
 import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Image,
   Pressable,
   StyleSheet,
   Text,
   View,
 } from "react-native";
-import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, radii, spacing, typography } from "@/constants/theme";
 import { analyzeHairPhoto, fetchScans, type Scan } from "@/utils/analyzeHair";
 import { hasPlus, usePlan } from "@/utils/entitlements";
+import { usePhotoCapture } from "@/components/usePhotoCapture";
 
 const METRICS: { key: keyof Scan; label: string }[] = [
   { key: "density", label: "Density" },
@@ -72,29 +71,9 @@ export default function HairScanCard() {
     loadScans();
   }, [loadScans]);
 
-  const pickPhoto = async (source: "camera" | "library") => {
+  const analyze = async (uri: string) => {
     setError(null);
     setTip(null);
-
-    if (source === "camera") {
-      const perm = await ImagePicker.requestCameraPermissionsAsync();
-      if (!perm.granted) {
-        Alert.alert("Camera access needed", "Allow camera access in Settings to take a photo.");
-        return;
-      }
-    }
-
-    const options: ImagePicker.ImagePickerOptions = {
-      mediaTypes: ["images"],
-      quality: 0.8,
-    };
-    const result =
-      source === "camera"
-        ? await ImagePicker.launchCameraAsync(options)
-        : await ImagePicker.launchImageLibraryAsync(options);
-    if (result.canceled || !result.assets?.[0]) return;
-
-    const uri = result.assets[0].uri;
     setPreviewUri(uri);
     setBusy(true);
 
@@ -111,6 +90,9 @@ export default function HairScanCard() {
       setError(res.message);
     }
   };
+
+  // Instructions popup (first time) -> custom camera or library -> analyze()
+  const { takePhoto, choosePhoto, openGuide, ui } = usePhotoCapture(analyze);
 
   // AI hair check is a Plus feature (the Edge Function enforces this too)
   if (!hasPlus(plan)) {
@@ -148,7 +130,7 @@ export default function HairScanCard() {
       <View style={styles.buttonRow}>
         <Pressable
           style={[styles.button, busy && styles.buttonDisabled]}
-          onPress={() => pickPhoto("camera")}
+          onPress={takePhoto}
           disabled={busy}
         >
           <Ionicons name="camera-outline" size={18} color="#fff" />
@@ -156,13 +138,19 @@ export default function HairScanCard() {
         </Pressable>
         <Pressable
           style={[styles.buttonOutline, busy && styles.buttonDisabled]}
-          onPress={() => pickPhoto("library")}
+          onPress={choosePhoto}
           disabled={busy}
         >
           <Ionicons name="image-outline" size={18} color={colors.primary} />
           <Text style={styles.buttonOutlineText}>Choose photo</Text>
         </Pressable>
       </View>
+
+      <Pressable onPress={openGuide} style={styles.guideLink} accessibilityRole="button">
+        <Ionicons name="information-circle-outline" size={16} color={colors.primaryDark} />
+        <Text style={styles.guideLinkText}>How to take a consistent photo</Text>
+      </Pressable>
+      {ui}
 
       {busy && (
         <View style={styles.busyBox}>
@@ -248,6 +236,8 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   heading: { ...typography.h3, color: colors.text },
+  guideLink: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: spacing.sm },
+  guideLinkText: { ...typography.caption, color: colors.primaryDark, fontWeight: "700" },
   lockRow: { flexDirection: "row", alignItems: "center", gap: spacing.xs },
   sub: { ...typography.body, color: colors.textMuted, marginTop: spacing.xs },
   buttonRow: { flexDirection: "row", gap: spacing.sm, marginTop: spacing.md },

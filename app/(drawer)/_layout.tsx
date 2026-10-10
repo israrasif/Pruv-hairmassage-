@@ -27,6 +27,7 @@ export default function DrawerLayout() {
         <Drawer.Screen name="plans" options={{ title: "Plans" }} />
         <Drawer.Screen name="settings" options={{ title: "Settings" }} />
         <Drawer.Screen name="help" options={{ title: "Help" }} />
+        <Drawer.Screen name="tips" options={{ title: "Tips" }} />
       </Drawer>
     </GestureHandlerRootView>
   );

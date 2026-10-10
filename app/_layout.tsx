@@ -8,8 +8,10 @@ import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/utils/supabase";
 import { createSessionFromUrl } from "@/utils/authLink";
 import { colors } from "@/constants/theme";
+import { useDataSyncTriggers } from "@/utils/useDataSync";
 
 export default function RootLayout() {
+  useDataSyncTriggers();
   // undefined = still checking for a saved session, null = signed out.
   const [session, setSession] = useState<Session | null | undefined>(undefined);
 

@@ -14,7 +14,6 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect, useRouter } from "expo-router";
-import * as ImagePicker from "expo-image-picker";
 import { Ionicons } from "@expo/vector-icons";
 import { VaultPhoto } from "@/types";
 import {
@@ -26,6 +25,7 @@ import { syncVaultPhotos, queueRemoteDelete } from "@/utils/vaultSync";
 import { hasPlus, usePlan } from "@/utils/entitlements";
 import { colors, spacing, typography, radii } from "@/constants/theme";
 import TopBar from "@/components/TopBar";
+import { usePhotoCapture } from "@/components/usePhotoCapture";
 
 const NUM_COLUMNS = 3;
 const GAP = 6;
@@ -81,47 +81,12 @@ export default function VaultScreen() {
     }, []),
   );
 
-  const captureFromCamera = async () => {
-    const perm = await ImagePicker.requestCameraPermissionsAsync();
-    if (!perm.granted) {
-      Alert.alert(
-        "Camera permission needed",
-        "Enable camera access in Settings to add photos.",
-      );
-      return;
-    }
-    const result = await ImagePicker.launchCameraAsync({
-      quality: 0.8,
-      allowsEditing: true,
-      aspect: [1, 1],
-    });
-    if (!result.canceled && result.assets[0]) {
-      const updated = await addVaultPhoto(result.assets[0].uri);
-      setPhotos(updated);
-      runSync();
-    }
-  };
-
-  const importFromLibrary = async () => {
-    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!perm.granted) {
-      Alert.alert(
-        "Photos permission needed",
-        "Enable photo library access in Settings to import photos.",
-      );
-      return;
-    }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      quality: 0.8,
-      allowsEditing: true,
-      aspect: [1, 1],
-    });
-    if (!result.canceled && result.assets[0]) {
-      const updated = await addVaultPhoto(result.assets[0].uri);
-      setPhotos(updated);
-      runSync();
-    }
-  };
+  // Instructions popup (first time) -> custom camera or library -> save to the vault
+  const { takePhoto, choosePhoto, ui: captureUI } = usePhotoCapture(async (uri) => {
+    const updated = await addVaultPhoto(uri);
+    setPhotos(updated);
+    runSync();
+  });
 
   const handleDelete = async (id: string) => {
     setSelected(null);
@@ -152,10 +117,7 @@ export default function VaultScreen() {
       return;
     }
     if (photos.length < 2) {
-      Alert.alert(
-        "Add more photos",
-        "You need at least two photos to compare.",
-      );
+      Alert.alert("Add more photos", "You need at least two photos to compare.");
       return;
     }
     setCompareMode(true);
@@ -195,13 +157,13 @@ export default function VaultScreen() {
       </View>
 
       <View style={styles.actionsRow}>
-        <Pressable style={styles.actionBtn} onPress={captureFromCamera}>
+        <Pressable style={styles.actionBtn} onPress={takePhoto}>
           <Ionicons name="camera" size={18} color="#fff" />
           <Text style={styles.actionText}>Camera</Text>
         </Pressable>
         <Pressable
           style={[styles.actionBtn, styles.actionBtnAlt]}
-          onPress={importFromLibrary}
+          onPress={choosePhoto}
         >
           <Ionicons name="images" size={18} color={colors.primary} />
           <Text style={[styles.actionText, { color: colors.primary }]}>
@@ -240,10 +202,7 @@ export default function VaultScreen() {
               : `Tap two photos to compare (${picked.length}/2)`}
           </Text>
           <Pressable
-            style={[
-              styles.compareGo,
-              picked.length < 2 && styles.compareGoDisabled,
-            ]}
+            style={[styles.compareGo, picked.length < 2 && styles.compareGoDisabled]}
             disabled={picked.length < 2}
             onPress={() => setComparing(true)}
           >
@@ -273,8 +232,7 @@ export default function VaultScreen() {
               color={colors.textMuted}
             />
             <Text style={styles.emptyText}>
-              No photos yet. Your vault is private and backed up to your
-              account.
+              No photos yet. Your vault is private and backed up to your account.
             </Text>
           </View>
         )
@@ -330,6 +288,8 @@ export default function VaultScreen() {
         />
       )}
 
+      {captureUI}
+
       {/* Single photo viewer */}
       <Modal
         visible={!!selected}
@@ -376,18 +336,12 @@ export default function VaultScreen() {
               <View style={styles.compareRow}>
                 <View style={styles.compareCol}>
                   <Text style={styles.compareLabel}>Before</Text>
-                  <Image
-                    source={{ uri: before.uri }}
-                    style={styles.compareImage}
-                  />
+                  <Image source={{ uri: before.uri }} style={styles.compareImage} />
                   <Text style={styles.compareDate}>{before.dateISO}</Text>
                 </View>
                 <View style={styles.compareCol}>
                   <Text style={styles.compareLabel}>After</Text>
-                  <Image
-                    source={{ uri: after.uri }}
-                    style={styles.compareImage}
-                  />
+                  <Image source={{ uri: after.uri }} style={styles.compareImage} />
                   <Text style={styles.compareDate}>{after.dateISO}</Text>
                 </View>
               </View>

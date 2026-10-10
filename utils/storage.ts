@@ -5,6 +5,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as FileSystem from "expo-file-system/legacy";
 import { Session, Activity, VaultPhoto, Thread } from "@/types";
 import { toLocalDateISO } from "./date";
+import { requestSync } from "@/utils/syncSignal";
 
 const KEYS = {
   SESSIONS: "@hair_massage/sessions",
@@ -52,6 +53,7 @@ export async function getActivities(): Promise<Activity[]> {
 
 export async function saveActivities(activities: Activity[]): Promise<void> {
   await AsyncStorage.setItem(KEYS.ACTIVITIES, JSON.stringify(activities));
+  requestSync();
 }
 
 // ---------- Sessions ----------
@@ -81,7 +83,22 @@ export async function addSession(session: Session): Promise<Session[]> {
   const sessions = await getSessions();
   const updated = [session, ...sessions];
   await AsyncStorage.setItem(KEYS.SESSIONS, JSON.stringify(updated));
+  requestSync();
   return updated;
+}
+
+export async function saveSessions(sessions: Session[]): Promise<void> {
+  await AsyncStorage.setItem(KEYS.SESSIONS, JSON.stringify(sessions));
+}
+
+export async function saveActivitiesSilently(
+  activities: Activity[],
+): Promise<void> {
+  await AsyncStorage.setItem(KEYS.ACTIVITIES, JSON.stringify(activities));
+}
+
+export async function resetActivities(): Promise<void> {
+  await AsyncStorage.multiRemove([KEYS.ACTIVITIES, LEGACY_TECHNIQUES_KEY]);
 }
 
 // ---------- Vault (photos) ----------

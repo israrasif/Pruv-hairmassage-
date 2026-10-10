@@ -13,6 +13,7 @@ import {
 import { colors, spacing, typography, radii } from "@/constants/theme";
 import TopBar from "@/components/TopBar";
 import HairScanCard from "@/components/HairScanCard"
+import HairHealthCard from "@/components/HairHealthCard";
 
 const CHART_WIDTH = Dimensions.get("window").width - spacing.lg * 2;
 const CHART_HEIGHT = 160;
@@ -60,6 +61,7 @@ export default function AnalyzeScreen() {
         <Text style={styles.subtitle}>
           A rough read on whether the routine is working for you.
         </Text>
+        <HairHealthCard />
         <HairScanCard />
         <View style={styles.scoreCard}>
           <Text style={styles.scoreNumber}>{score}%</Text>

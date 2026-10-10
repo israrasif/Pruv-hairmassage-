@@ -18,8 +18,10 @@ import Svg, { Circle } from "react-native-svg";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, typography } from "@/constants/theme";
 import * as Haptics from "expo-haptics";
+import * as Speech from "expo-speech";
 import { useKeepAwake } from "expo-keep-awake";
 import { useAudioPlayer } from "expo-audio";
+import { segmentInfo, type GuideSegment } from "@/utils/sessionGuide";
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 const SIZE = 240;
@@ -28,12 +30,24 @@ const RADIUS = (SIZE - STROKE) / 2;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 const RESET_DELAY_MS = 900;
 
+const mmss = (sec: number) =>
+  `${Math.floor(sec / 60)}:${String(Math.max(0, Math.round(sec % 60))).padStart(2, "0")}`;
+
 interface Props {
   durationSec: number;
   onComplete: (elapsedSec: number) => void;
+  /** Optional: areas to move through during the session (guided mode) */
+  segments?: GuideSegment[];
+  /** Speak each change of area out loud. Vibration always happens in guided mode. */
+  voiceCues?: boolean;
 }
 
-export default function CircularTimer({ durationSec, onComplete }: Props) {
+export default function CircularTimer({
+  durationSec,
+  onComplete,
+  segments,
+  voiceCues = false,
+}: Props) {
   const [remaining, setRemaining] = useState(durationSec);
   const [running, setRunning] = useState(false);
   const [justFinished, setJustFinished] = useState(false);
@@ -41,6 +55,17 @@ export default function CircularTimer({ durationSec, onComplete }: Props) {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const resetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const endTimeRef = useRef<number | null>(null); // ms epoch when the session should finish
+
+  // Guided mode: remember which area we last announced, so each change is announced once
+  const lastSegRef = useRef(-1);
+  const segmentsRef = useRef(segments);
+  const voiceRef = useRef(voiceCues);
+  useEffect(() => {
+    segmentsRef.current = segments;
+  }, [segments]);
+  useEffect(() => {
+    voiceRef.current = voiceCues;
+  }, [voiceCues]);
 
   const player = useAudioPlayer(
     require("@/assets/sounds/391540__unlistenable__electro-success-sound.wav"),
@@ -57,6 +82,8 @@ export default function CircularTimer({ durationSec, onComplete }: Props) {
   const reset = useCallback(() => {
     if (resetTimeoutRef.current) clearTimeout(resetTimeoutRef.current);
     endTimeRef.current = null;
+    lastSegRef.current = -1;
+    Speech.stop();
     setRunning(false);
     setJustFinished(false);
     setRemaining(durationSec);
@@ -74,6 +101,8 @@ export default function CircularTimer({ durationSec, onComplete }: Props) {
     if (secsLeft <= 0) {
       if (intervalRef.current) clearInterval(intervalRef.current);
       endTimeRef.current = null;
+      lastSegRef.current = -1;
+      Speech.stop();
       setRunning(false);
       setJustFinished(true);
 
@@ -117,6 +146,7 @@ export default function CircularTimer({ durationSec, onComplete }: Props) {
   useEffect(() => {
     return () => {
       if (resetTimeoutRef.current) clearTimeout(resetTimeoutRef.current);
+      Speech.stop();
     };
   }, []);
 
@@ -130,6 +160,34 @@ export default function CircularTimer({ durationSec, onComplete }: Props) {
     }).start();
   }, [remaining, durationSec, progress]);
 
+  // Guided mode: vibrate (and optionally speak) when it's time to move to the next area
+  const announce = useCallback((index: number) => {
+    const segs = segmentsRef.current;
+    if (!segs || !segs[index]) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+    if (voiceRef.current) {
+      Speech.stop();
+      const label = segs[index].label;
+      Speech.speak(
+        index === 0
+          ? `Start with ${label}`
+          : index === segs.length - 1
+            ? `Last area, ${label}`
+            : `Next, ${label}`,
+      );
+    }
+  }, []);
+
+  useEffect(() => {
+    const segs = segmentsRef.current;
+    if (!running || !segs || segs.length === 0) return;
+    const { index } = segmentInfo(segs, durationSec - remaining);
+    if (index !== lastSegRef.current) {
+      lastSegRef.current = index;
+      announce(index);
+    }
+  }, [running, remaining, durationSec, announce]);
+
   const strokeDashoffset = progress.interpolate({
     inputRange: [0, 1],
     outputRange: [CIRCUMFERENCE, 0],
@@ -142,6 +200,13 @@ export default function CircularTimer({ durationSec, onComplete }: Props) {
     : running
       ? "Relax..."
       : "Ready when you are";
+
+  // What to show under the controls in guided mode
+  const guided = !!segments && segments.length > 0;
+  const started = running || remaining < durationSec;
+  const info = guided ? segmentInfo(segments!, durationSec - remaining) : null;
+  const now = info ? segments![info.index] : null;
+  const next = info ? segments![info.index + 1] : null;
 
   return (
     <View style={styles.container}>
@@ -187,6 +252,22 @@ export default function CircularTimer({ durationSec, onComplete }: Props) {
         </Pressable>
         <View style={{ width: 42 }} />
       </View>
+
+      {guided && !justFinished && (
+        <View style={styles.guide}>
+          {started && now && info ? (
+            <>
+              <Text style={styles.guideNow}>{now.label}</Text>
+              <Text style={styles.guideSub}>
+                {mmss(info.secondsLeft)} left in this area
+                {next ? ` · Next: ${next.label}` : " · Last area"}
+              </Text>
+            </>
+          ) : (
+            <Text style={styles.guideSub}>Guided: {segments!.length} areas</Text>
+          )}
+        </View>
+      )}
     </View>
   );
 }
@@ -227,5 +308,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     alignItems: "center",
     justifyContent: "center",
+  },
+  guide: { alignItems: "center", marginTop: 16, paddingHorizontal: 12 },
+  guideNow: { ...typography.h3, color: colors.primary, textAlign: "center" },
+  guideSub: {
+    ...typography.caption,
+    color: colors.textMuted,
+    marginTop: 2,
+    textAlign: "center",
   },
 });

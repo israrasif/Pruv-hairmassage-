@@ -4,8 +4,7 @@ import { encodeBase64 } from "jsr:@std/encoding/base64";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 // Free Google Gemini model. "flash-latest" always points to the newest free Flash model.
@@ -25,6 +24,7 @@ Score each item from 0 to 10, where HIGHER IS ALWAYS BETTER:
 Rules:
 - Judge only what is visible. Lighting and angle affect results, so be conservative.
 - If the photo is not a clear photo of hair/scalp, set "usable" to false and explain in "notes".
+- Also set "usable" to false if the photo is too dark, blurry, overexposed, or has strong glare or shadows that hide the hair or scalp. In "photo_tips", say exactly how to fix it (for example: "Face a window and turn the flash off", or "Hold the phone steady and closer to your parting").
 - "notes": 1-2 short, encouraging, practical sentences. No medical claims, no diagnosis.
 - "photo_tips": one short tip to get a better comparable photo next time.
 
@@ -38,12 +38,10 @@ function json(body: unknown, status = 200) {
   });
 }
 
-const clamp = (n: unknown) =>
-  Math.max(0, Math.min(10, Math.round(Number(n) || 0)));
+const clamp = (n: unknown) => Math.max(0, Math.min(10, Math.round(Number(n) || 0)));
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS")
-    return new Response("ok", { headers: corsHeaders });
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
     // 1. Who is calling? (uses the user's own login token)
@@ -77,10 +75,7 @@ Deno.serve(async (req) => {
       : false;
     const isPaid = !planExpired && planRow?.plan === "plus";
     if (!isPaid) {
-      return json(
-        { error: "AI hair check is a Plus feature.", code: "plan_required" },
-        403,
-      );
+      return json({ error: "AI hair check is a Plus feature.", code: "plan_required" }, 403);
     }
 
     // 3b. Rate limit
@@ -91,10 +86,7 @@ Deno.serve(async (req) => {
       .eq("user_id", user.id)
       .gte("created_at", since);
     if ((count ?? 0) >= DAILY_LIMIT) {
-      return json(
-        { error: "Daily scan limit reached. Try again tomorrow." },
-        429,
-      );
+      return json({ error: "Daily scan limit reached. Try again tomorrow." }, 429);
     }
 
     // 4. Download the photo (storage policies make sure it's theirs)
@@ -105,17 +97,11 @@ Deno.serve(async (req) => {
 
     const imageBytes = new Uint8Array(await blob.arrayBuffer());
     if (imageBytes.length < 1000) {
-      console.error(
-        "Photo is empty or too small. Bytes:",
-        imageBytes.length,
-        "path:",
-        path,
-      );
+      console.error("Photo is empty or too small. Bytes:", imageBytes.length, "path:", path);
       return json({ error: "Photo upload was empty, please try again." }, 400);
     }
     const base64 = encodeBase64(imageBytes);
-    const mediaType =
-      blob.type && blob.type.startsWith("image/") ? blob.type : "image/jpeg";
+    const mediaType = blob.type && blob.type.startsWith("image/") ? blob.type : "image/jpeg";
 
     // 5. Ask the vision LLM (Google Gemini, free tier)
     const geminiBody = JSON.stringify({
@@ -159,10 +145,9 @@ Deno.serve(async (req) => {
 
     if (!llmRes.ok) {
       console.error("LLM error", llmRes.status, await llmRes.text());
-      const msg =
-        llmRes.status === 429
-          ? "We're busy right now, please try again in a minute."
-          : "Analysis failed, please try again";
+      const msg = llmRes.status === 429
+        ? "We're busy right now, please try again in a minute."
+        : "Analysis failed, please try again";
       return json({ error: msg }, llmRes.status === 429 ? 429 : 502);
     }
 
@@ -208,9 +193,7 @@ Deno.serve(async (req) => {
     const shine = clamp(parsed.shine);
     const integrity = clamp(parsed.integrity);
     // Overall is computed here (not by the LLM) so it's consistent
-    const overall = Math.round(
-      (density + scalp_coverage + shine + integrity) / 4,
-    );
+    const overall = Math.round((density + scalp_coverage + shine + integrity) / 4);
     const notes = String(parsed.notes ?? "").slice(0, 500);
     const photo_tips = String(parsed.photo_tips ?? "").slice(0, 300);
 

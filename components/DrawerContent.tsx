@@ -21,7 +21,8 @@ const MAIN_ITEMS: Item[] = [
     icon: "list-outline",
     href: "/routine",
     tag: "Plus",
-  }
+  },
+  { label: "Tips", icon: "bulb-outline", href: "/tips" }
 ];
 
 // Home owns the whole bottom tab bar, so it counts as active on any of these.

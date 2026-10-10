@@ -1,0 +1,279 @@
+{
+  "_help": "This file controls every number and sentence in the personalized plan. Edit freely, keep it valid JSON. levels = how long and how often. profiles = the plan types. tasks = the check-off items. The app can also load this from Supabase (table app_config, key plan_config) so you can change it without publishing an app update.",
+  "version": 1,
+  "planWeeks": 12,
+  "maxMinutesPerDay": 20,
+  "maxTasksPerWeek": 3,
+  "minMinutesPerZone": 1,
+  "pressureRule": "Press firmly enough that your scalp moves over the skull, but never to the point of pain. If your scalp is sensitive, use a lighter touch with the same slow circles.",
+  "levels": {
+    "L1": {
+      "label": "Gentle start",
+      "minutes": 4,
+      "days": 3
+    },
+    "L2": {
+      "label": "Daily 4",
+      "minutes": 4,
+      "days": 6
+    },
+    "L3": {
+      "label": "Build",
+      "minutes": 10,
+      "days": 5
+    },
+    "L4": {
+      "label": "Focused",
+      "minutes": 15,
+      "days": 5
+    }
+  },
+  "ramp": {
+    "_help": "Which level is used in which weeks. 'target' means the level chosen for the person's profile, never higher than the target. Sensitive scalps start the ramp 2 weeks later.",
+    "weeks1to2": "L1",
+    "weeks3to4": "L2",
+    "weeks5to6": "L3",
+    "weeks7to12": "target",
+    "sensitiveDelayWeeks": 2,
+    "splitSessionsFromMinutes": 15
+  },
+  "zones": {
+    "front": "Front and temples",
+    "crown": "Crown",
+    "sides": "Sides and above the ears",
+    "back": "Back of head and base of skull"
+  },
+  "techniques": {
+    "_help": "Launch uses slow circles only, for everyone. Other techniques are parked in futureTechniques below (not used by the app yet).",
+    "weeks1to2": [
+      "Slow circles with your finger pads, moving the scalp over the skull"
+    ],
+    "weeks3to4": [
+      "Slow circles with your finger pads, moving the scalp over the skull"
+    ],
+    "weeks5to12": [
+      "Slow circles with your finger pads, moving the scalp over the skull"
+    ],
+    "sensitive": [
+      "Slow, light circles with your finger pads. Same motion, lighter touch."
+    ]
+  },
+  "review": {
+    "simplifyBelow": 0.5,
+    "stepUpAtOrAbove": 0.8,
+    "minDaysAfterSimplify": 3
+  },
+  "gates": {
+    "patchy": {
+      "title": "Let's check this with a doctor first",
+      "body": "Round or patchy bald spots can have causes that massage can make worse, such as alopecia areata. We won't build a massage plan for this. Please see a doctor or dermatologist. Our Tips and Research sections have more background in the meantime."
+    },
+    "problem": {
+      "title": "Please get your scalp checked first",
+      "body": "Sores, a rash, an infection or a diagnosed scalp condition (like psoriasis, eczema or seborrheic dermatitis) need a doctor's advice before regular massage. We won't build a plan until you've talked to one. Come back and set this up once you have the all-clear."
+    }
+  },
+  "safetyNotes": [
+    "Stop and rest your scalp if you feel pain, burning or new irritation.",
+    "Never massage over sores, a rash, sunburn or an infection.",
+    "Keep your nails short and your hands clean.",
+    "Sudden, patchy or rapidly increasing hair loss should be checked by a doctor."
+  ],
+  "profiles": {
+    "heavy_shedding": {
+      "title": "Calm and support plan",
+      "summary": "You told us you're losing a lot more hair than usual. This plan keeps massage gentle and short while you work on the basics and find out what's behind it.",
+      "expectation": "Massage has not been shown to reduce shedding, so we won't promise that. This plan focuses on scalp comfort, stress, sleep and habits, plus getting a doctor's view on the cause. Shedding often settles over a few months once the cause is addressed.",
+      "targetLevel": "L2",
+      "daysCap": 5,
+      "zoneStyle": "relax",
+      "preferredTime": "evening",
+      "stepUpTo": null
+    },
+    "pattern": {
+      "title": "Pattern focus plan",
+      "summary": "You notice thinning in a specific area. This plan covers your whole scalp, with a little extra time on that area, and builds up gradually.",
+      "expectation": "A small self-reported survey of people with pattern thinning found many felt their hair loss stabilized or regrew after several months of regular massage. It was not a controlled trial, so this is not proven. Judge progress at 12 and 24 weeks, using your photos and scores.",
+      "targetLevel": "L3",
+      "daysCap": 5,
+      "zoneStyle": "focus",
+      "preferredTime": "any",
+      "stepUpTo": "L4"
+    },
+    "diffuse": {
+      "title": "Even coverage plan",
+      "summary": "Your hair feels thinner all over, so this plan covers the whole scalp evenly and builds up gradually.",
+      "expectation": "In the same self-reported survey, results were slightly weaker for thinning all over than for the front or crown. Expect gradual change at best, and consider a check-up, since thinning all over can have nutritional or medical causes.",
+      "targetLevel": "L3",
+      "daysCap": 5,
+      "zoneStyle": "even",
+      "preferredTime": "any",
+      "stepUpTo": null
+    },
+    "scalp_comfort": {
+      "title": "Gentle scalp plan",
+      "summary": "Your scalp is sometimes itchy, flaky or tender, so this plan starts light and slow and avoids anything that could irritate it.",
+      "expectation": "The goal is a calmer, more comfortable scalp. If itching or flaking hasn't improved after 4 weeks, or gets worse, see a doctor or dermatologist.",
+      "targetLevel": "L2",
+      "daysCap": 4,
+      "zoneStyle": "even",
+      "preferredTime": "any",
+      "stepUpTo": null
+    },
+    "condition": {
+      "title": "Strong hair care plan",
+      "summary": "Your hair mainly shows dryness or breakage. Massage is a small part of this plan; the bigger gains come from how you handle and style your hair.",
+      "expectation": "Breakage and dryness mostly come from heat, chemicals and rough handling, not from the scalp. Expect your hair to feel and look better over several weeks as damage grows out.",
+      "targetLevel": "L2",
+      "daysCap": 5,
+      "zoneStyle": "even",
+      "preferredTime": "any",
+      "stepUpTo": null
+    },
+    "stress_sleep": {
+      "title": "Relax and reset plan",
+      "summary": "Stress and sleep are your weakest areas, so this plan uses calming evening sessions focused on the temples, skull base and neck.",
+      "expectation": "Massage is well known for easing tension, which is the aim here. Better sleep and lower stress support healthy hair over time, but we can't promise changes in your hair itself.",
+      "targetLevel": "L2",
+      "daysCap": 6,
+      "zoneStyle": "relax",
+      "preferredTime": "evening",
+      "stepUpTo": null
+    },
+    "maintenance": {
+      "title": "Maintenance plan",
+      "summary": "Your answers look healthy, so this plan keeps a simple, steady habit going and tracks your hair over time.",
+      "expectation": "Early research suggests regular scalp massage may modestly improve hair thickness in healthy people, but it is not proven to treat hair loss. Think of this as a healthy routine and a way to spot changes early.",
+      "targetLevel": "L2",
+      "daysCap": 5,
+      "zoneStyle": "even",
+      "preferredTime": "any",
+      "stepUpTo": null
+    }
+  },
+  "zoneStyles": {
+    "even": {
+      "front": 0.25,
+      "crown": 0.25,
+      "sides": 0.25,
+      "back": 0.25
+    },
+    "relax": {
+      "front": 0.15,
+      "crown": 0.15,
+      "sides": 0.35,
+      "back": 0.35
+    },
+    "focus": {
+      "focusArea": 0.4
+    }
+  },
+  "tasks": {
+    "checkup": "Book a check-up to find out what's behind your shedding. Ask about blood tests such as ferritin, vitamin D and B12, and take your photos and results from this app.",
+    "checkupRecheck": "If your shedding hasn't improved, speak to a doctor again and take your progress report with you.",
+    "photo": "Take your progress photo, using the same pose, light and spot as last time.",
+    "quiz": "Retake the hair health check and compare your score.",
+    "checkin": "Log your daily check-in (sleep, activity, mood) on at least 5 days.",
+    "sheddingCheck": "How was your shedding this week?"
+  },
+  "photoWeeks": [
+    1,
+    3,
+    5,
+    7,
+    9,
+    12
+  ],
+  "quizWeeks": [
+    4,
+    8,
+    12
+  ],
+  "checkinWeeks": [
+    1,
+    5,
+    9
+  ],
+  "sheddingCheckProfiles": [
+    "heavy_shedding",
+    "pattern",
+    "diffuse"
+  ],
+  "habits": [
+    {
+      "week": 2,
+      "text": "Detangle gently with a wide-tooth comb, starting from the ends.",
+      "for": [
+        "*"
+      ]
+    },
+    {
+      "week": 3,
+      "text": "Cut back on heat styling this week: lowest setting and fewer days.",
+      "for": [
+        "*"
+      ]
+    },
+    {
+      "week": 4,
+      "text": "Loosen tight hairstyles (ponytails, braids, buns) and change where you part.",
+      "for": [
+        "*"
+      ]
+    },
+    {
+      "week": 5,
+      "text": "Aim for 7 or more hours of sleep on at least 5 nights.",
+      "for": [
+        "heavy_shedding",
+        "stress_sleep",
+        "lifestyle"
+      ]
+    },
+    {
+      "week": 6,
+      "text": "Read the nutrition tips and add an iron- or protein-rich food to most meals.",
+      "for": [
+        "heavy_shedding",
+        "diffuse",
+        "nutrition"
+      ]
+    },
+    {
+      "week": 7,
+      "text": "Rinse products out fully and skip heavy oils if your scalp feels irritated.",
+      "for": [
+        "sensitive",
+        "scalp_comfort"
+      ]
+    },
+    {
+      "week": 8,
+      "text": "Switch screens off 30 minutes before bed and keep a regular bedtime.",
+      "for": [
+        "stress_sleep",
+        "lifestyle"
+      ]
+    },
+    {
+      "week": 9,
+      "text": "Move for 20 minutes or more on 4 days this week. It helps sleep and stress.",
+      "for": [
+        "stress_sleep",
+        "lifestyle",
+        "heavy_shedding"
+      ]
+    }
+  ],
+  "milestones": {
+    "2": "Your habit is started.",
+    "4": "One month in. Retake the hair health check.",
+    "8": "Two months in. Compare your photos and scores.",
+    "12": "12-week review. Decide whether to continue to 24 weeks."
+  },
+  "futureTechniques": {
+    "_help": "Parked for later. To switch one on, copy its text into the lists above for the weeks and profiles you want. Add a short video or animation first, so people can see how.",
+    "stretch": "Gentle stretches: place your fingers apart on the scalp and hold for a few seconds",
+    "kneading": "Light kneading with your fingertips"
+  }
+}

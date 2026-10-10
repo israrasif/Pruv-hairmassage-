@@ -1,11 +1,451 @@
-import React from "react";
-import PlaceholderScreen from "@/components/PlaceholderScreen";
+// app/(drawer)/routine.tsx
+import React, { useCallback, useState } from "react";
+import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useFocusEffect, useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import TopBar from "@/components/TopBar";
+import PlanIntake from "@/components/PlanIntake";
+import { colors, radii, spacing, typography } from "@/constants/theme";
+import { hasPlus, usePlan } from "@/utils/entitlements";
+import { getSessions } from "@/utils/storage";
+import { setSessionLengthMin } from "@/utils/settings";
+import {
+  Plan,
+  PlanIntake as Intake,
+  WeekPlan,
+  applyReview,
+  buildPlan,
+  currentWeek,
+  daysDoneInWeek,
+  reviewPlan,
+} from "@/utils/planBuilder";
+import {
+  PlanProgress,
+  getPlan,
+  getPlanConfig,
+  getProgress,
+  getQuizInput,
+  getScanInput,
+  resetPlan,
+  savePlan,
+  saveProgress,
+} from "@/utils/planStore";
+
+const EMPTY: PlanProgress = { done: {}, shedding: {}, irritation: false };
+
+const describe = (w: WeekPlan) =>
+  `${w.minutesPerDay} min × ${w.daysPerWeek} days` + (w.sessionsPerDay === 2 ? ", in 2 sessions a day" : "");
 
 export default function RoutineScreen() {
+  const router = useRouter();
+  const plus = hasPlus(usePlan());
+
+  const [config, setConfig] = useState<any>(null);
+  const [plan, setPlan] = useState<Plan | null>(null);
+  const [progress, setProgress] = useState<PlanProgress>(EMPTY);
+  const [timestamps, setTimestamps] = useState<number[]>([]);
+  const [hasQuiz, setHasQuiz] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const [intakeOpen, setIntakeOpen] = useState(false);
+  const [building, setBuilding] = useState(false);
+  const [gate, setGate] = useState<{ title: string; body: string } | null>(null);
+  const [showAll, setShowAll] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+      (async () => {
+        const [cfg, p, prog, sessions, quiz] = await Promise.all([
+          getPlanConfig(),
+          getPlan(),
+          getProgress(),
+          getSessions(),
+          getQuizInput(),
+        ]);
+        if (!active) return;
+        setConfig(cfg);
+        setPlan(p);
+        setProgress(prog);
+        setTimestamps(sessions.map((s) => s.timestamp));
+        setHasQuiz(!!quiz);
+        setLoaded(true);
+      })();
+      return () => {
+        active = false;
+      };
+    }, []),
+  );
+
+  const updateProgress = async (next: PlanProgress) => {
+    setProgress(next);
+    await saveProgress(next);
+  };
+
+  const onIntakeDone = async (intake: Intake) => {
+    setIntakeOpen(false);
+    setBuilding(true);
+    setGate(null);
+    try {
+      const cfg = config ?? (await getPlanConfig());
+      const quiz = await getQuizInput();
+      if (!quiz) return;
+      const scan = plus ? await getScanInput() : null;
+      const result = buildPlan(cfg, quiz, scan, intake);
+      if (result.kind === "doctor_first") {
+        setGate({ title: result.title, body: result.body });
+      } else {
+        await savePlan(result.plan);
+        await saveProgress(EMPTY);
+        setPlan(result.plan);
+        setProgress(EMPTY);
+      }
+    } finally {
+      setBuilding(false);
+    }
+  };
+
+  const confirmReset = () =>
+    Alert.alert("Start over?", "This removes your current plan and its progress. Your photos and scores stay.", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Remove plan",
+        style: "destructive",
+        onPress: async () => {
+          await resetPlan();
+          setPlan(null);
+          setProgress(EMPTY);
+          setGate(null);
+        },
+      },
+    ]);
+
+  if (!loaded) {
+    return (
+      <SafeAreaView style={styles.safe} edges={["top"]}>
+        <TopBar />
+        <ActivityIndicator style={{ marginTop: spacing.xl }} color={colors.primary} />
+      </SafeAreaView>
+    );
+  }
+
+  // ------------------------------------------------------------- no plan yet
+  if (!plan) {
+    return (
+      <SafeAreaView style={styles.safe} edges={["top"]}>
+        <TopBar />
+        <ScrollView contentContainerStyle={styles.container}>
+          <Text style={styles.title}>Your routine</Text>
+          <Text style={styles.subtitle}>
+            A 12-week scalp-care plan built from your hair health check{plus ? " and photo scans" : ""}.
+          </Text>
+
+          {gate && (
+            <View style={[styles.card, styles.gateCard]}>
+              <Text style={styles.cardTitle}>{gate.title}</Text>
+              <Text style={styles.body}>{gate.body}</Text>
+            </View>
+          )}
+
+          {building ? (
+            <ActivityIndicator style={{ marginTop: spacing.lg }} color={colors.primary} />
+          ) : !hasQuiz ? (
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>First, take the hair health check</Text>
+              <Text style={styles.body}>
+                Your plan is built from your answers. It takes about 2 minutes and is free.
+              </Text>
+              <Pressable style={styles.primaryBtn} onPress={() => router.navigate("/analyze" as any)}>
+                <Text style={styles.primaryBtnText}>Go to the hair health check</Text>
+              </Pressable>
+            </View>
+          ) : (
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>Build my plan</Text>
+              <Text style={styles.body}>
+                Four quick questions, then you'll see your plan. Your first week is free; Plus unlocks the full 12 weeks,
+                monthly reviews and plan adjustments.
+              </Text>
+              <Pressable style={styles.primaryBtn} onPress={() => setIntakeOpen(true)}>
+                <Text style={styles.primaryBtnText}>Start (4 questions)</Text>
+              </Pressable>
+            </View>
+          )}
+
+          <Text style={styles.disclaimer}>
+            A habit plan for scalp care, not medical advice and not a treatment for hair loss.
+          </Text>
+        </ScrollView>
+        <PlanIntake visible={intakeOpen} onClose={() => setIntakeOpen(false)} onDone={onIntakeDone} />
+      </SafeAreaView>
+    );
+  }
+
+  // ---------------------------------------------------------------- has plan
+  const cw = currentWeek(plan);
+  const week = plan.weeks[cw - 1];
+  const daysDone = daysDoneInWeek(plan, cw, timestamps);
+  const freeLocked = !plus && cw > 1;
+
+  const review = config ? reviewPlan(config, plan, timestamps, progress.shedding, progress.irritation) : null;
+  const showReview = !!review && plus && cw >= 2 && (progress.reviewedWeek ?? 0) < cw;
+
+  const applyReviewNow = async () => {
+    if (!review || !config) return;
+    const next = applyReview(config, plan, review.action, cw);
+    await savePlan(next);
+    setPlan(next);
+    await updateProgress({ ...progress, irritation: false, reviewedWeek: cw });
+  };
+
+  const tick = (id: string) =>
+    updateProgress({ ...progress, done: { ...progress.done, [id]: !progress.done[id] } });
+
   return (
-    <PlaceholderScreen
-      title="Routine builder"
-      body="A short quiz that builds your massage routine. Coming with Plus."
-    />
+    <SafeAreaView style={styles.safe} edges={["top"]}>
+      <TopBar />
+      <ScrollView contentContainerStyle={styles.container}>
+        <Text style={styles.title}>{plan.title}</Text>
+        <Text style={styles.subtitle}>{plan.summary}</Text>
+
+        <View style={styles.weekBadgeRow}>
+          <View style={styles.weekBadge}>
+            <Text style={styles.weekBadgeText}>
+              Week {cw} of {plan.weeks.length}
+            </Text>
+          </View>
+          {!!week.milestone && <Text style={styles.milestone}>{week.milestone}</Text>}
+        </View>
+
+        {freeLocked ? (
+          <View style={[styles.card, styles.lockCard]}>
+            <View style={styles.rowCenter}>
+              <Ionicons name="lock-closed" size={18} color={colors.primaryDark} />
+              <Text style={styles.cardTitle}>Your free week has ended</Text>
+            </View>
+            <Text style={styles.body}>
+              Keep your plan going with Plus: the full 12 weeks, weekly targets, monthly reviews that adjust to how you're
+              doing, and your progress report.
+            </Text>
+            <Pressable style={styles.primaryBtn} onPress={() => router.push("/plans")}>
+              <Text style={styles.primaryBtnText}>See Plus</Text>
+            </Pressable>
+          </View>
+        ) : (
+          <>
+            {/* This week */}
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>This week's massage</Text>
+              <Text style={styles.target}>{describe(week)}</Text>
+              <View style={styles.dots}>
+                {Array.from({ length: week.daysPerWeek }).map((_, i) => (
+                  <View key={i} style={[styles.dot, i < daysDone && styles.dotDone]} />
+                ))}
+                <Text style={styles.dotsText}>
+                  {Math.min(daysDone, week.daysPerWeek)} of {week.daysPerWeek} days done
+                </Text>
+              </View>
+
+              <Text style={styles.label}>Where to spend the time</Text>
+              {week.zoneMinutes.map((z) => (
+                <Text key={z.zone} style={styles.line}>
+                  • {z.label}: {z.minutes} min
+                </Text>
+              ))}
+
+              <Text style={styles.label}>Technique</Text>
+              {week.techniques.map((t) => (
+                <Text key={t} style={styles.line}>
+                  • {t}
+                </Text>
+              ))}
+              <Text style={[styles.line, { marginTop: spacing.xs }]}>• {plan.pressureRule}</Text>
+              {plan.preferredTime === "evening" && (
+                <Text style={styles.line}>• Evenings work best for you: it helps you wind down.</Text>
+              )}
+
+              <Pressable
+                style={styles.outlineBtn}
+                onPress={async () => {
+                  await setSessionLengthMin(week.sessionsPerDay === 2 ? Math.round(week.minutesPerDay / 2) : week.minutesPerDay);
+                  router.navigate("/");
+                }}
+              >
+                <Text style={styles.outlineBtnText}>
+                  Set my timer to {week.sessionsPerDay === 2 ? Math.round(week.minutesPerDay / 2) : week.minutesPerDay} min
+                </Text>
+              </Pressable>
+            </View>
+
+            {/* Tasks */}
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>This week's to-do</Text>
+              {week.tasks.map((t) =>
+                t.type === "shedding_check" ? (
+                  <View key={t.id} style={styles.taskBlock}>
+                    <Text style={styles.line}>{t.text}</Text>
+                    <View style={styles.choiceRow}>
+                      {(["less", "same", "more"] as const).map((c) => (
+                        <Pressable
+                          key={c}
+                          style={[styles.choice, progress.shedding[cw] === c && styles.choiceOn]}
+                          onPress={() => updateProgress({ ...progress, shedding: { ...progress.shedding, [cw]: c } })}
+                        >
+                          <Text style={[styles.choiceText, progress.shedding[cw] === c && styles.choiceTextOn]}>
+                            {c === "less" ? "Less" : c === "same" ? "Same" : "More"}
+                          </Text>
+                        </Pressable>
+                      ))}
+                    </View>
+                  </View>
+                ) : (
+                  <Pressable key={t.id} style={styles.task} onPress={() => tick(t.id)} accessibilityRole="checkbox">
+                    <Ionicons
+                      name={progress.done[t.id] ? "checkbox" : "square-outline"}
+                      size={22}
+                      color={progress.done[t.id] ? colors.primary : colors.textMuted}
+                    />
+                    <Text style={[styles.taskText, progress.done[t.id] && styles.taskDone]}>{t.text}</Text>
+                  </Pressable>
+                ),
+              )}
+              <Pressable
+                onPress={() => updateProgress({ ...progress, irritation: true })}
+                style={{ marginTop: spacing.sm }}
+              >
+                <Text style={styles.link}>
+                  {progress.irritation ? "Noted: we'll suggest an easier plan at your next review." : "My scalp feels irritated"}
+                </Text>
+              </Pressable>
+            </View>
+
+            {/* Review */}
+            {showReview && review && (
+              <View style={styles.card}>
+                <Text style={styles.cardTitle}>Your weekly review</Text>
+                <Text style={styles.body}>
+                  Consistency over the last weeks: {Math.round(review.adherence * 100)}%
+                </Text>
+                <Text style={[styles.body, { marginTop: spacing.xs }]}>{review.message}</Text>
+                {review.action !== "keep" ? (
+                  <View style={styles.choiceRow}>
+                    <Pressable style={[styles.choice, styles.choiceOn]} onPress={applyReviewNow}>
+                      <Text style={styles.choiceTextOn}>
+                        {review.action === "step_up" ? "Move up" : review.action === "simplify" ? "Make it easier" : "Go gentler"}
+                      </Text>
+                    </Pressable>
+                    <Pressable
+                      style={styles.choice}
+                      onPress={() => updateProgress({ ...progress, reviewedWeek: cw })}
+                    >
+                      <Text style={styles.choiceText}>Not now</Text>
+                    </Pressable>
+                  </View>
+                ) : (
+                  <Pressable onPress={() => updateProgress({ ...progress, reviewedWeek: cw })}>
+                    <Text style={[styles.link, { marginTop: spacing.sm }]}>Got it</Text>
+                  </Pressable>
+                )}
+              </View>
+            )}
+          </>
+        )}
+
+        {/* All weeks */}
+        <Pressable style={styles.sectionToggle} onPress={() => setShowAll(!showAll)}>
+          <Text style={styles.cardTitle}>All 12 weeks</Text>
+          <Ionicons name={showAll ? "chevron-up" : "chevron-down"} size={20} color={colors.textMuted} />
+        </Pressable>
+        {showAll &&
+          plan.weeks.map((w) => {
+            const locked = !plus && w.week > 1;
+            return (
+              <View key={w.week} style={[styles.weekRow, w.week === cw && styles.weekRowNow]}>
+                <Text style={styles.weekNum}>Week {w.week}</Text>
+                {locked ? (
+                  <View style={styles.rowCenter}>
+                    <Ionicons name="lock-closed" size={13} color={colors.primaryDark} />
+                    <Text style={styles.weekText}>Plus</Text>
+                  </View>
+                ) : (
+                  <Text style={styles.weekText}>{describe(w)}</Text>
+                )}
+              </View>
+            );
+          })}
+
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>What to expect</Text>
+          <Text style={styles.body}>{plan.expectation}</Text>
+        </View>
+
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Stay safe</Text>
+          {plan.safetyNotes.map((n) => (
+            <Text key={n} style={styles.line}>
+              • {n}
+            </Text>
+          ))}
+        </View>
+
+        <Pressable onPress={confirmReset} style={{ marginTop: spacing.md }}>
+          <Text style={styles.link}>Start over with a new plan</Text>
+        </Pressable>
+        <Text style={styles.disclaimer}>
+          A habit plan for scalp care, not medical advice and not a treatment for hair loss.
+        </Text>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: colors.background },
+  container: { padding: spacing.lg, paddingBottom: spacing.xl * 2 },
+  title: { ...typography.h1, color: colors.text },
+  subtitle: { ...typography.body, color: colors.textMuted, marginTop: spacing.xs, marginBottom: spacing.md, lineHeight: 21 },
+  card: {
+    backgroundColor: colors.surface,
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+  },
+  gateCard: { borderColor: colors.primary },
+  lockCard: { borderColor: colors.primaryDark },
+  cardTitle: { ...typography.h3, color: colors.text },
+  body: { ...typography.body, color: colors.text, lineHeight: 21, marginTop: spacing.xs },
+  target: { ...typography.h1, fontSize: 22, color: colors.primary, marginTop: spacing.xs },
+  label: { ...typography.caption, color: colors.textMuted, fontWeight: "700", marginTop: spacing.md, marginBottom: 2 },
+  line: { ...typography.body, color: colors.text, lineHeight: 21, marginTop: 2 },
+  rowCenter: { flexDirection: "row", alignItems: "center", gap: spacing.xs },
+  weekBadgeRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm, marginBottom: spacing.md, flexWrap: "wrap" },
+  weekBadge: { backgroundColor: colors.primary, borderRadius: radii.pill, paddingHorizontal: spacing.md, paddingVertical: 4 },
+  weekBadgeText: { ...typography.caption, color: "#fff", fontWeight: "700" },
+  milestone: { ...typography.caption, color: colors.textMuted, flexShrink: 1 },
+  dots: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: spacing.sm, flexWrap: "wrap" },
+  dot: { width: 14, height: 14, borderRadius: 7, backgroundColor: colors.track },
+  dotDone: { backgroundColor: colors.primary },
+  dotsText: { ...typography.caption, color: colors.textMuted, marginLeft: spacing.xs },
+  primaryBtn: { backgroundColor: colors.primary, borderRadius: radii.md, paddingVertical: 13, alignItems: "center", marginTop: spacing.md },
+  primaryBtnText: { ...typography.body, color: "#fff", fontWeight: "700" },
+  outlineBtn: { borderWidth: 1, borderColor: colors.primary, borderRadius: radii.md, paddingVertical: 12, alignItems: "center", marginTop: spacing.md },
+  outlineBtnText: { ...typography.body, color: colors.primary, fontWeight: "700" },
+  task: { flexDirection: "row", gap: spacing.sm, marginTop: spacing.md, alignItems: "flex-start" },
+  taskText: { ...typography.body, color: colors.text, flex: 1, lineHeight: 21 },
+  taskDone: { color: colors.textMuted, textDecorationLine: "line-through" },
+  taskBlock: { marginTop: spacing.md },
+  choiceRow: { flexDirection: "row", gap: spacing.sm, marginTop: spacing.sm },
+  choice: { flex: 1, borderWidth: 1, borderColor: colors.border, borderRadius: radii.md, paddingVertical: 10, alignItems: "center" },
+  choiceOn: { backgroundColor: colors.primary, borderColor: colors.primary },
+  choiceText: { ...typography.body, color: colors.text },
+  choiceTextOn: { ...typography.body, color: "#fff", fontWeight: "700" },
+  link: { ...typography.caption, color: colors.primaryDark, fontWeight: "700" },
+  sectionToggle: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: spacing.sm, marginBottom: spacing.sm },
+  weekRow: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.border },
+  weekRowNow: { backgroundColor: colors.track },
+  weekNum: { ...typography.body, color: colors.text, fontWeight: "700" },
+  weekText: { ...typography.body, color: colors.textMuted, flexShrink: 1, textAlign: "right" },
+  disclaimer: { ...typography.caption, color: colors.textMuted, marginTop: spacing.lg, lineHeight: 18 },
+});

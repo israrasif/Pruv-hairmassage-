@@ -1,0 +1,196 @@
+{
+  "_help": "Edit the text below freely. Each section has a title, subtitle, icon (an Ionicons name) and optional image. For an image use a web link like https://example.com/pic.jpg, or null for none. To use a picture from your project, add it in data/tipImages.ts and write \"local:your-key\". Each tip can have its own image too. Keep the file valid JSON: quotes around text, commas between items, no comma after the last item.",
+  "screen": {
+    "title": "Tips",
+    "subtitle": "Simple habits for a healthier scalp and stronger hair."
+  },
+  "disclaimer": "General information only, not medical advice. Hair loss can have medical causes. If you notice sudden, patchy or heavy shedding, see a doctor or dermatologist before starting supplements.",
+  "sections": [
+    {
+      "id": "evidence",
+      "title": "What the research says about scalp massage",
+      "subtitle": "Honest answers, including what isn't known",
+      "icon": "flask-outline",
+      "image": null,
+      "tips": [
+        {
+          "title": "The short version",
+          "body": "Scalp massage is safe for most people and relaxing, and early research is encouraging for hair thickness. It has not been proven to treat or reverse hair loss.",
+          "image": null
+        },
+        {
+          "title": "What a small study found",
+          "body": "In a small study, nine healthy men used a massage device for 4 minutes a day for 24 weeks, and the thickness of their hair increased slightly. None of them had hair loss, and the study was very small.",
+          "image": null
+        },
+        {
+          "title": "What people with pattern thinning report",
+          "body": "A survey of people with pattern hair loss found that many said their hair loss stabilized or regrew after months of regular massage, usually 11 to 20 minutes a day. Everyone reported their own results and there was no comparison group, and some people were probably also using other treatments. That makes it interesting, but not proof.",
+          "image": null
+        },
+        {
+          "title": "Where there is little or no evidence",
+          "body": "We could not find solid evidence that massage reduces heavy shedding or helps patchy hair loss. If you are losing a lot of hair, the most useful step is finding out why, with a doctor.",
+          "image": null
+        },
+        {
+          "title": "When massage is not the right first step",
+          "body": "If you have round or patchy bald spots, scarring, sores, a rash or an infection, see a doctor before massaging. Rubbing can make some conditions worse.",
+          "image": null
+        },
+        {
+          "title": "Be careful with big claims online",
+          "body": "Be wary of anyone who says massage, a supplement or a gadget is proven to regrow hair. A real proof needs well-run trials, and for scalp massage those have not been done yet.",
+          "image": null
+        },
+        {
+          "title": "How to judge your own results",
+          "body": "Hair changes slowly. Use photos taken the same way each time and judge progress after 12 and 24 weeks, not day to day.",
+          "image": null
+        }
+      ]
+    },
+    {
+      "id": "massage",
+      "title": "Scalp massage technique",
+      "subtitle": "Get more out of every session",
+      "icon": "hand-left-outline",
+      "image": null,
+      "tips": [
+        {
+          "title": "Use the pads of your fingers",
+          "body": "Press with the soft pads of your fingertips, not your nails. Nails can scratch and irritate the skin, and keeping them short makes sessions more comfortable.",
+          "image": null
+        },
+        {
+          "title": "Press firmly, then move the scalp",
+          "body": "Rest your finger pads firmly on the scalp and make small, slow circles so the scalp skin moves over the skull underneath. You should feel the skin shifting with your fingers, not your fingers skating over it.",
+          "image": null
+        },
+        {
+          "title": "Don't slide your fingers across the scalp",
+          "body": "Dragging your fingers across the hair and skin causes friction. That can tug on strands, cause breakage and irritate the scalp. Lift, reposition, and press again instead.",
+          "image": null
+        },
+        {
+          "title": "Work the muscles around the skull too",
+          "body": "Your scalp sits on thin muscles that tighten with stress. Spend time on the temples, above and behind the ears, the base of the skull and the top of the neck. Releasing this tension is a big part of why a massage feels so relaxing.",
+          "image": null
+        },
+        {
+          "title": "Go section by section",
+          "body": "Start at the hairline, then move to the crown, the sides and the back of the head, so no area is skipped. Take about the same time on each area.",
+          "image": null
+        },
+        {
+          "title": "Firm, never painful",
+          "body": "Use moderate pressure that feels like a good stretch. If anything burns, stings or hurts, ease off or stop.",
+          "image": null
+        },
+        {
+          "title": "Little and often beats hard and rare",
+          "body": "A few minutes most days is easier to keep up than one long session a week. A small study found slightly thicker hair after months of daily scalp massage, but the evidence is limited, so treat it as a healthy habit rather than a cure.",
+          "image": null
+        },
+        {
+          "title": "Breathe and relax your jaw",
+          "body": "Slow breathing and an unclenched jaw help the muscles let go. A calm session is more useful than a fast, forceful one.",
+          "image": null
+        },
+        {
+          "title": "Oil is optional",
+          "body": "A few drops of a light oil can make the massage feel nicer, but it isn't required. If your scalp is oily, flaky or prone to irritation, skip it, and always wash it out afterwards.",
+          "image": null
+        },
+        {
+          "title": "Skip it when your scalp is irritated",
+          "body": "Avoid massaging over sores, rashes, sunburn, infections or a bad dandruff flare-up. See a doctor if irritation doesn't settle.",
+          "image": null
+        }
+      ]
+    },
+    {
+      "id": "nutrition",
+      "title": "Nutrition for hair",
+      "subtitle": "Which deficiencies are linked to hair loss",
+      "icon": "nutrition-outline",
+      "image": null,
+      "tips": [
+        {
+          "title": "Test before you supplement",
+          "body": "Hair shedding has many causes. If you're shedding more than usual, ask a doctor about blood tests (for example ferritin, vitamin D and B12) rather than guessing. Taking high doses of some nutrients can do more harm than good.",
+          "image": null
+        },
+        {
+          "title": "Iron",
+          "body": "Low iron stores (low ferritin) are one of the most common nutritional links to shedding, especially in people who menstruate, eat little red meat, or follow vegetarian or vegan diets. Food sources: lentils, beans, tofu, leafy greens, eggs and meat. Pair plant iron with vitamin C (like citrus or peppers) to absorb more.",
+          "image": null
+        },
+        {
+          "title": "Zinc",
+          "body": "Zinc supports hair growth and repair, and a shortage has been linked to thinning hair. Food sources: pumpkin seeds, chickpeas, lentils, nuts, whole grains, dairy and meat. More is not better: very high zinc intake causes its own problems.",
+          "image": null
+        },
+        {
+          "title": "Vitamin D",
+          "body": "Low vitamin D levels are associated with several types of hair loss. Sources: sensible sun exposure, fatty fish, eggs and fortified foods. A blood test can tell you whether you actually need a supplement.",
+          "image": null
+        },
+        {
+          "title": "Vitamin B12 and folate",
+          "body": "Both help your body make healthy cells, including hair follicle cells. B12 is found mainly in animal foods, so vegetarians and vegans in particular should check their levels. Sources: dairy, eggs, fish, meat, fortified foods; folate: leafy greens, beans and lentils.",
+          "image": null
+        },
+        {
+          "title": "Protein",
+          "body": "Hair is made of protein, so too little can lead to weaker hair and extra shedding. Include a protein source at most meals: pulses, eggs, dairy, tofu, fish or meat.",
+          "image": null
+        },
+        {
+          "title": "Biotin: usually not the answer",
+          "body": "Real biotin deficiency is rare, and extra biotin hasn't been shown to help hair in people who aren't deficient. High-dose biotin can also interfere with some blood tests, so tell your doctor if you take it.",
+          "image": null
+        },
+        {
+          "title": "Avoid crash diets",
+          "body": "Very low calorie diets or rapid weight loss can trigger noticeable shedding a few months later. Steady, balanced eating is kinder to your hair.",
+          "image": null
+        },
+        {
+          "title": "Too much vitamin A can backfire",
+          "body": "Excess vitamin A from supplements can contribute to hair loss. Get it from food (carrots, sweet potato, leafy greens) unless a doctor advises otherwise.",
+          "image": null
+        }
+      ]
+    },
+    {
+      "id": "habits",
+      "title": "Everyday habits",
+      "subtitle": "Small things that protect your hair",
+      "icon": "leaf-outline",
+      "image": null,
+      "tips": [
+        {
+          "title": "Sleep and stress matter",
+          "body": "Long periods of stress or poor sleep can push more hairs into the shedding phase. Use the daily check-in on the Home screen to spot patterns between how you slept and how your hair feels.",
+          "image": null
+        },
+        {
+          "title": "Be gentle when hair is wet",
+          "body": "Wet hair is more fragile. Detangle from the ends upward with a wide-tooth comb and pat dry instead of rubbing hard with a towel.",
+          "image": null
+        },
+        {
+          "title": "Ease up on heat and chemicals",
+          "body": "Frequent heat styling, bleaching and chemical treatments weaken strands. Use the lowest heat setting that works, and give your hair rest days.",
+          "image": null
+        },
+        {
+          "title": "Avoid tight hairstyles",
+          "body": "Constantly pulling the hair into tight ponytails, braids or buns can strain the follicles over time. Loosen the style and change the position now and then.",
+          "image": null
+        }
+      ]
+    }
+  ]
+}
